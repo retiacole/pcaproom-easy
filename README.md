@@ -1,8 +1,19 @@
+<p align="center">
+  <img src="docs/images/pcaproom-banner.png" width="960" alt="ステンドグラスのある大聖堂で祈るpcaproom-easyのキャラクターを描いたピクセルアート">
+</p>
+
 # pcaproom-easy v0.3.0
 
 [English README](README.en.md) | 日本語
 
+<img src="docs/images/pcaproom-character.png" align="right" width="120" alt="白と青の衣装で杖と本を持つpcaproom-easyのキャラクター">
+
+**パケットを読み、通信の根拠を見つける。**<br>
+*Read packets. Follow the evidence.*
+
 パケットを開き、詳細を読み、根拠を選んで答えるネットワーク入門教材です。Wireshark風の画面で、基本プロトコルを51問・95設問で練習します。
+
+<br clear="right">
 
 ## 日本語・英語の切り替え
 

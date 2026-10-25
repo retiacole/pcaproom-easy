@@ -1,8 +1,18 @@
+<p align="center">
+  <img src="docs/images/pcaproom-banner.png" width="960" alt="Pixel art of the pcaproom-easy character praying in a cathedral with stained-glass windows">
+</p>
+
 # pcaproom-easy v0.3.0
 
 English | [日本語](README.md)
 
+<img src="docs/images/pcaproom-character.png" align="right" width="120" alt="The pcaproom-easy character in white and blue, holding a staff and a book">
+
+**Read packets. Follow the evidence.**
+
 An offline introduction to reading network packets: **51 lessons, 95 questions**, and 12 protocol topics in a Wireshark-style interface. Open packets, read their details, and support answers with selected evidence.
+
+<br clear="right">
 
 ## Start learning
 
