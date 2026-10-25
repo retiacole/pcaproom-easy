@@ -31,13 +31,13 @@ const glossary=[
 ].map(([term,description])=>({term,description}));
 fs.mkdirSync(path.join(__dirname,'captures'),{recursive:true});
 const captures=specs.map((s,i)=>{const c=buildCapture(s);fs.writeFileSync(path.join(__dirname,'captures',c.id+'.pcap'),Buffer.from(c.pcapBase64,'base64'));process.stdout.write(`Capture ${i+1}/${specs.length}: ${c.id}\n`);return c;});
-const data={version:'0.2.0',chapters,captures,lessons,glossary};
-const errors=E.validateData(data);if(errors.length)throw new Error(errors.join('\n'));
+const data={version:'0.3.0',chapters,captures,lessons,glossary,translations:{en:require('./content/en')}};
+const errors=[...E.validateData(data),...require('./content/validate-translations')(data,data.translations.en)];if(errors.length)throw new Error(errors.join('\n'));
 const js='globalThis.PcapData='+JSON.stringify(data)+';';
 fs.writeFileSync(path.join(__dirname,'src/data.js'),js);
 if(process.argv.includes('--data-only'))process.exit(0);
 let html=fs.readFileSync(path.join(__dirname,'src/shell.html'),'utf8');
-for(const [key,file]of Object.entries({CSS:'style.css',DATA:'data.js',ENGINE:'engine.js',APP:'app.js'})){
+for(const [key,file]of Object.entries({CSS:'style.css',DATA:'data.js',ENGINE:'engine.js',I18N:'i18n.js',APP:'app.js'})){
  let content=fs.readFileSync(path.join(__dirname,'src',file),'utf8');if(key!=='CSS')content=content.replace(/<\/script/gi,'<\\/script');html=html.replace('/*__'+key+'__*/',()=>content);
 }
 if(/\/\*__\w+__\*\//.test(html))throw new Error('Unreplaced build marker');

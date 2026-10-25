@@ -23,7 +23,7 @@ const filters = {
 function assembleHtml() {
   if (process.env.PCAPROOM_HTML) return fs.readFileSync(path.resolve(process.env.PCAPROOM_HTML), 'utf8');
   let html = fs.readFileSync(path.join(root, 'src/shell.html'), 'utf8');
-  for (const [name, file] of Object.entries({ CSS: 'style.css', DATA: 'data.js', ENGINE: 'engine.js', APP: 'app.js' })) {
+  for (const [name, file] of Object.entries({ CSS: 'style.css', DATA: 'data.js', ENGINE: 'engine.js', I18N: 'i18n.js', APP: 'app.js' })) {
     let source = fs.readFileSync(path.join(root, 'src', file), 'utf8');
     if (name !== 'CSS') source = source.replace(/<\/script/gi, '<\\/script');
     html = html.replace(`/*__${name}__*/`, () => source);
@@ -36,7 +36,8 @@ function assembleHtml() {
 
 const html = assembleHtml();
 
-function createApp({ storage = new Map(), unavailable = false, expectedFlags = 0 } = {}) {
+function createApp({ storage = new Map(), unavailable = false, expectedFlags = 0, language } = {}) {
+  if(language)storage.set('pcaproom-easy.language.v1',language);
   const errors = [], downloads = [], urls = new Map();
   let urlId = 0;
   const virtualConsole = new VirtualConsole();
@@ -156,7 +157,7 @@ function solveLesson(app, lesson) {
     assert.ok(app.query('#feedback .feedback').classList.contains('success'), `${lesson.id}/${task.id}: ${app.query('#feedback').textContent}`);
     if (lesson.tasks.length > 1) assert.ok(app.query(`[data-task="${index}"]`).textContent.includes('✓'), 'correct task tab is checked');
   }
-  assert.ok(app.query('#completion-area').textContent.includes('100ポイント'), `${lesson.id} awards a flag`);
+  assert.ok(app.query('#completion-area').textContent.includes(app.window.PcapI18n.locale==='en'?'100 points':'100ポイント'), `${lesson.id} awards a flag`);
   assert.equal(app.errors.length, 0, `${lesson.id}: no runtime errors`);
 }
 function saved(app) { return JSON.parse(app.storage.get(STORE)); }
@@ -168,8 +169,8 @@ async function importText(app, content, size = Buffer.byteLength(content)) {
   await new Promise(resolve => setImmediate(resolve));
 }
 
-test('all 51 lessons are solvable through packet, detail, evidence and answer controls; progress reloads', { timeout: 120000 }, () => {
-  const app = createApp();
+for(const language of ['ja','en'])test(`all 51 lessons are solvable in ${language}; progress reloads`, { timeout: 240000 }, () => {
+  const app = createApp({language});
   let reload;
   try {
     const lessons = app.window.PcapData.lessons;
@@ -179,6 +180,7 @@ test('all 51 lessons are solvable through packet, detail, evidence and answer co
     let answered = 0;
     for (const [index, lesson] of lessons.entries()) {
       solveLesson(app, lesson);
+      if(language==='en'){for(let h=0;h<3;h++)app.click('[data-action="hint"]');app.click('[data-action="solution"]');assertEnglish(app);}
       lesson.tasks.forEach(task => kinds.add(task.kind));
       answered += lesson.tasks.length;
       assert.equal(Number(app.query('#top-count').textContent), index + 1);
@@ -188,7 +190,7 @@ test('all 51 lessons are solvable through packet, detail, evidence and answer co
     assert.equal(answered, lessons.reduce((sum, lesson) => sum + lesson.tasks.length, 0), 'every individual task is exercised');
     app.click('[data-action="home"]');
     assert.equal(app.query('[role="progressbar"]').getAttribute('aria-valuenow'), '51');
-    assert.ok(app.query('.hero-metrics').textContent.includes('5100ポイント'));
+    assert.ok(app.query('.hero-metrics').textContent.includes(language==='en'?'5100 points':'5100ポイント'));
     assert.equal(app.document.querySelectorAll('.lesson-link.done').length, 51);
 
     // Learners may explore a different filter after winning a flag. The saved
@@ -204,7 +206,7 @@ test('all 51 lessons are solvable through packet, detail, evidence and answer co
     assert.equal(reload.document.querySelectorAll('.lesson-link.done').length, 51);
     openLesson(reload, 'ops-filter-1');
     assert.equal(reload.query('#filter-input').value, 'frame.number == 1');
-    assert.ok(reload.query('#completion-area').textContent.includes('100ポイント'), 'completion remains after exploratory filter edit and reload');
+    assert.ok(reload.query('#completion-area').textContent.includes(language==='en'?'100 points':'100ポイント'), 'completion remains after exploratory filter edit and reload');
     assert.equal(reload.errors.length, 0);
   } finally { app.dom.window.close(); reload?.dom.window.close(); }
 });
@@ -403,4 +405,86 @@ test('learning and manual export work when browser storage is unavailable', asyn
     assert.equal(completed(exported), 1);
     assert.equal(app.errors.length, 0);
   } finally { app.dom.window.close(); }
+});
+
+
+function assertEnglish(app,scope=app.document.body){
+ const copy=scope.cloneNode(true);copy.querySelectorAll('script,style,noscript,[data-language-name]').forEach(n=>n.remove());
+ const untranslated=copy.textContent.match(/[^\n]{0,80}[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}][^\n]{0,120}/u);
+ assert.equal(untranslated,null,`Untranslated visible content: ${untranslated?.[0]}`);
+ for(const el of copy.querySelectorAll('[aria-label],[placeholder],[title]'))for(const attr of ['aria-label','placeholder','title'])assert.doesNotMatch(el.getAttribute(attr)||'',/[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u,`${attr} is translated`);
+}
+
+test('language switch retains drafts, task, evidence, selected field, filters, disclosures and earned flags',()=>{
+ const app=createApp();let restored;
+ try{
+  const lesson=app.window.PcapData.lessons.find(l=>l.id==='app-tcp-02');
+  solveLesson(app,lesson);
+  chooseTask(app,1,lesson.tasks.length);
+  app.input('#answer-input','review draft');
+  addEvidence(app,lesson.tasks[1].evidence[0]);
+  app.change('#time-mode','utc');
+  applyFilter(app,'tcp');
+  app.input('#filter-input','tcp && unfinished');
+  const field=[...app.document.querySelectorAll('.field')].find(el=>el.querySelector('.field-key')?.textContent==='tcp.ack');app.click(field);
+  app.query('#bytes-disclosure').open=true;
+  app.click('[data-action="hint"]');app.click('[data-action="solution"]');
+  const before=JSON.stringify(saved(app));
+  app.change('#language-select','en');
+  assert.equal(app.document.documentElement.lang,'en');assert.equal(app.query('#language-select').value,'en');
+  assert.equal(JSON.stringify(saved(app)),before,'switch writes no progress changes');
+  assert.equal(app.query('#answer-input').value,'review draft');assert.equal(app.query('#filter-input').value,'tcp && unfinished');
+  assert.equal(app.query('#time-mode').value,'utc');assert.equal(app.query('#bytes-disclosure').open,true);
+  assert.equal(app.query('[data-task="1"]').getAttribute('aria-pressed'),'true');
+  assert.match(app.query('#selected-field').textContent,/tcp\.ack/);assert.equal(app.query('#top-count').textContent,'1');
+  assertEnglish(app);
+  app.change('#language-select','ja');
+  assert.equal(app.document.documentElement.lang,'ja');assert.equal(JSON.stringify(saved(app)),before);
+  assert.match(app.query('.question').textContent,/ACK/);assert.match(app.query('[data-action="check"]').textContent,/答え合わせ/);
+  app.change('#language-select','en');
+  restored=createRestoredApp(new Map(app.storage));assert.equal(restored.document.documentElement.lang,'en');
+  openLesson(restored,lesson.id);assert.equal(restored.query('#top-count').textContent,'1');
+  assert.equal(restored.errors.length,0);
+ }finally{app.dom.window.close();restored?.dom.window.close();}
+});
+
+test('English help, glossary, filters, streams, errors, progress import and PCAP export remain usable',async()=>{
+ const app=createApp({language:'en'});
+ try{
+  assertEnglish(app);
+  for(const action of ['help','glossary']){app.click(`[data-action="${action}"]`);assertEnglish(app);app.click('[data-action="close-modal"]');}
+  openLesson(app,'app-http-03');
+  for(const action of ['filters','wireshark','stream']){app.click(`[data-action="${action}"]`);assertEnglish(app);app.click('[data-action="close-modal"]');}
+  applyFilter(app,'tcp');const frames=visibleFrames(app);applyFilter(app,'bogus &&');
+  assert.match(app.query('#filter-message').textContent,/unsupported/);assert.deepEqual(visibleFrames(app),frames);assertEnglish(app);
+  app.click('[data-action="check"]');assertEnglish(app);
+  app.click('[data-action="pcap"]');const download=app.downloads.at(-1);
+  const capture=app.window.PcapData.captures.find(c=>c.id==='app-http-03-capture');
+  assert.deepEqual(Buffer.from(await download.blob.arrayBuffer()),Buffer.from(capture.pcapBase64,'base64'));
+  await importText(app,JSON.stringify(app.window.PcapEngine.emptyProgress()));assertEnglish(app);
+  app.click('[data-action="confirm-import"]');assert.equal(app.document.documentElement.lang,'en');assertEnglish(app);
+  await importText(app,JSON.stringify({app:'wrong'}));assertEnglish(app);
+  assert.equal(app.errors.length,0,app.errors.map(e=>e.stack).join('\n'));
+ }finally{app.dom.window.close();}
+});
+
+test('English content covers every presentation field while canonical answers and decoded captures are shared',()=>{
+ const app=createApp({language:'en'});
+ try{
+  const source=app.window.PcapData,translated=app.window.PcapI18n.localize(source);
+  assert.equal(require('../content/validate-translations')(source,source.translations.en).length,0);
+  assert.equal(source.lessons.length,51);assert.equal(source.lessons.reduce((n,l)=>n+l.tasks.length,0),95);
+  for(const [i,l]of translated.lessons.entries())for(const [j,t]of l.tasks.entries()){
+   const original=source.lessons[i].tasks[j];for(const key of ['id','kind','answer','evidence','normalize','evidenceMode','expectedFilter'])assert.equal(t[key],original[key],`${l.id}/${t.id}: ${key}`);
+   if(t.options)assert.deepEqual(Array.from(t.options,o=>o.value),Array.from(original.options,o=>o.value));
+  }
+  for(const [i,c]of translated.captures.entries()){assert.equal(c.packets,source.captures[i].packets);assert.equal(c.pcapBase64,source.captures[i].pcapBase64);assert.equal(c.streams,source.captures[i].streams);}
+ }finally{app.dom.window.close();}
+});
+
+test('language preference tolerates blocked storage and invalid values',()=>{
+ const app=createApp({unavailable:true});let invalid;
+ try{app.change('#language-select','en');assert.equal(app.document.documentElement.lang,'en');assert.match(app.query('#storage-note').textContent,/Autosave/);assertEnglish(app);app.click('[data-open="ops-view-1"]');assertEnglish(app);assert.equal(app.errors.length,0,app.errors.map(e=>e.stack).join('\n'));
+ invalid=createApp({language:'unsupported'});assert.equal(invalid.document.documentElement.lang,'ja');
+ }finally{app.dom.window.close();invalid?.dom.window.close();}
 });
