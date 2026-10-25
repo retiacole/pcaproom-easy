@@ -13,3 +13,5 @@ dialog{border:1px solid var(--line);border-radius:10px;padding:0;width:min(780px
 .tcp-options{margin:4px 0 6px 12px;padding:3px 8px;border-left:2px solid var(--line)}
 
 .language-control{display:inline-flex;align-items:center;gap:5px;font-size:11px;white-space:nowrap}.language-control select{min-height:34px;max-width:112px;padding:4px 7px;font:inherit;color:var(--ink);background:white;border:1px solid var(--line);border-radius:5px}.top-actions{flex-wrap:wrap;justify-content:flex-end}html[lang="en"] .lesson-link,html[lang="en"] .field,html[lang="en"] .question{overflow-wrap:anywhere}html[lang="en"] .journey{flex-wrap:wrap}html[lang="en"] .capturebar{flex-wrap:wrap}html[lang="en"] .hero-metrics{flex-wrap:wrap}html[lang="en"] .work-footer{flex-wrap:wrap;gap:10px}@media(max-width:550px){.language-control select{font-size:16px}.top-actions{gap:5px;justify-content:flex-start}.language-control{margin-right:auto}.evidence-bar{flex-wrap:wrap}.evidence-bar .selected-label{flex-basis:100%}.hero-actions>button{white-space:normal}}
+
+.help-illustration{display:block;width:100%;max-width:100%;height:auto;margin-top:24px;border-radius:8px}
