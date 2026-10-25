@@ -131,3 +131,7 @@ npm test
 ## ライセンス
 
 MIT License。全教材の正解もソースに含みます。個人学習用であり、サーバー認証付き試験や不正防止を目的とする採点システムではありません。
+
+<p align="center">
+  <img src="assets/help-ending.png" width="100%" alt="大きな鳥に乗って空を旅するroomシリーズの仲間たち">
+</p>

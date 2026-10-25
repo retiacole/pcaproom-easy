@@ -37,9 +37,6 @@ const js='globalThis.PcapData='+JSON.stringify(data)+';';
 fs.writeFileSync(path.join(__dirname,'src/data.js'),js);
 if(process.argv.includes('--data-only'))process.exit(0);
 let html=fs.readFileSync(path.join(__dirname,'src/shell.html'),'utf8');
-// Keep the supplied artwork inside the standalone file for fully offline help.
-const helpArtwork=fs.readFileSync(path.join(__dirname,'assets/help-ending.png'));
-html=html.replace('src="assets/help-ending.png"',()=>`src="data:image/png;base64,${helpArtwork.toString('base64')}"`);
 for(const [key,file]of Object.entries({CSS:'style.css',DATA:'data.js',ENGINE:'engine.js',I18N:'i18n.js',APP:'app.js'})){
  let content=fs.readFileSync(path.join(__dirname,'src',file),'utf8');if(key!=='CSS')content=content.replace(/<\/script/gi,'<\\/script');html=html.replace('/*__'+key+'__*/',()=>content);
 }

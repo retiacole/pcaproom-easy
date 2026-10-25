@@ -101,3 +101,7 @@ jsdom is required only for tests. To reuse an existing installation, set `PCAPRO
 ## License
 
 MIT. Answers are included in the source. This is a self-study tool, not a server-authenticated exam or anti-cheating system.
+
+<p align="center">
+  <img src="assets/help-ending.png" width="100%" alt="The room series companions journey through the sky on a great bird">
+</p>
