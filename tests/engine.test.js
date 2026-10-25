@@ -14,6 +14,23 @@ const fixtures=[
 ];
 const ids=query=>E.filterPackets(query,fixtures).map(p=>p.number);
 
+test('frame contains matches case-sensitive UTF-8 captured bytes at byte boundaries',()=>{
+ const packets=[{number:1,rawHex:Buffer.from('GET /こんにちは HTTP/1.1').toString('hex')},{number:2,rawHex:'04745540'},{number:3,rawHex:Buffer.from('get').toString('hex'),fields:{'http.request.method':['GET']}}];
+ const run=q=>E.filterPackets(q,packets).map(p=>p.number);
+ assert.deepEqual(run('frame contains "GET"'),[1]);
+ assert.deepEqual(run('frame contains "こんにちは"'),[1]);
+ assert.deepEqual(run('frame contains "get"'),[3]);
+ assert.throws(()=>run('frame contains GET'),E.FilterError);
+ assert.throws(()=>run('frame contains ""'),E.FilterError);
+});
+
+test('time formats use UTC and captured delta rather than filtered previous row',()=>{
+ const p={time:0.125,timestampEpoch:1767225600.125,timeDelta:0.005};
+ assert.equal(E.formatTime(p,'relative'),'0.125000');
+ assert.equal(E.formatTime(p,'utc'),'2026-01-01 00:00:00.125000');
+ assert.equal(E.formatTime(p,'delta'),'0.005000');
+});
+
 test('protocol, endpoint aliases, conjunction/disjunction, precedence and parentheses work',()=>{
  assert.deepEqual(ids('dns'),[1,2]);
  assert.deepEqual(ids('ip.addr == 10.0.0.10'),[1,2,3]);
@@ -111,11 +128,19 @@ function builtData(){
 const officialFilters={'ops-filter-1':'dns','ops-filter-2':'dns && ip.src == 10.0.0.11','ops-filter-3':'dns && ip.addr == 10.0.0.10','app-dns-03':'dns && tcp'};
 function officialEntry(t){return {answer:t.kind==='text'&&Array.isArray(t.answer)?t.answer[0]:t.answer,evidence:t.evidence||[]};}
 
-test('all 45 lessons validate, every official answer passes, wrong answers fail, evidence is selectable',()=>{
+test('all 45 completion proofs from v0.1 survive the upgraded curriculum',()=>{
+ const legacy=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/progress-v0.1.json'),'utf8'));
+ const restored=E.hydrate(legacy,builtData());
+ assert.equal(Object.keys(legacy.lessons).length,45);
+ for(const id of Object.keys(legacy.lessons))assert.equal(restored.lessons[id]?.complete,true,id);
+ assert.equal(Object.values(restored.lessons).filter(s=>s.complete).length,45);
+});
+
+test('all 51 lessons validate, every official answer passes, wrong answers fail, evidence is selectable',()=>{
  const data=builtData();assert.deepEqual(E.validateData(data),[]);
- assert.equal(data.lessons.length,45);let tasks=0;
+ assert.equal(data.lessons.length,51);let tasks=0;
  for(const lesson of data.lessons){
-  const cap=data.captures.find(c=>c.id===lesson.captureId);const filter=officialFilters[lesson.id]||'';
+  const cap=data.captures.find(c=>c.id===lesson.captureId);const filter=lesson.tasks.find(t=>t.kind==='filter')?.expectedFilter||officialFilters[lesson.id]||'';
   for(const t of lesson.tasks){
    tasks++;assert.equal(E.gradeTask(t,officialEntry(t),cap,filter).correct,true,`${lesson.id}/${t.id} official`);
    const wrong={...officialEntry(t),answer:['packets','order'].includes(t.kind)?[]:'__wrong__'};
@@ -128,9 +153,9 @@ test('all 45 lessons validate, every official answer passes, wrong answers fail,
 
 test('complete curriculum progress survives a validated export/import round trip',()=>{
  const data=builtData(),raw=E.emptyProgress();raw.currentLesson=data.lessons.at(-1).id;
- for(const lesson of data.lessons)raw.lessons[lesson.id]={...E.emptyLesson(),filter:officialFilters[lesson.id]||'',complete:true,completedAt:'2026-10-25T12:00:00Z',answers:Object.fromEntries(lesson.tasks.map(t=>[t.id,officialEntry(t)]))};
+ for(const lesson of data.lessons)raw.lessons[lesson.id]={...E.emptyLesson(),filter:lesson.tasks.find(t=>t.kind==='filter')?.expectedFilter||officialFilters[lesson.id]||'',complete:true,completedAt:'2026-10-25T12:00:00Z',answers:Object.fromEntries(lesson.tasks.map(t=>[t.id,officialEntry(t)]))};
  const restored=E.hydrate(JSON.parse(JSON.stringify(raw)),data);
- assert.equal(Object.values(restored.lessons).filter(s=>s.complete).length,45);
+ assert.equal(Object.values(restored.lessons).filter(s=>s.complete).length,51);
  assert.equal(restored.currentLesson,raw.currentLesson);
 });
 

@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path');
 const {buildCapture}=require('./packet-tools');
 const E=require('./src/engine');
-const modules=['operations','foundation','applications','graduation'].map(n=>require('./content/'+n));
+const modules=['operations','foundation','applications','graduation','realworld'].map(n=>require('./content/'+n));
 const chapters=modules.flatMap(m=>m.chapters),lessons=modules.flatMap(m=>m.lessons),specs=modules.flatMap(m=>m.captures);
 const glossary=[
  ['パケット／フレーム','ネットワーク上を流れるデータのまとまり。この教材はEthernetフレームを1行ずつ表示し、内部のIPやTCPなどを展開します。'],
@@ -31,7 +31,7 @@ const glossary=[
 ].map(([term,description])=>({term,description}));
 fs.mkdirSync(path.join(__dirname,'captures'),{recursive:true});
 const captures=specs.map((s,i)=>{const c=buildCapture(s);fs.writeFileSync(path.join(__dirname,'captures',c.id+'.pcap'),Buffer.from(c.pcapBase64,'base64'));process.stdout.write(`Capture ${i+1}/${specs.length}: ${c.id}\n`);return c;});
-const data={version:'0.1.0',chapters,captures,lessons,glossary};
+const data={version:'0.2.0',chapters,captures,lessons,glossary};
 const errors=E.validateData(data);if(errors.length)throw new Error(errors.join('\n'));
 const js='globalThis.PcapData='+JSON.stringify(data)+';';
 fs.writeFileSync(path.join(__dirname,'src/data.js'),js);

@@ -7,7 +7,7 @@ const basePackets=[
  {type:'dns',time:0,src:'10.0.0.10',dst:'10.0.0.53',name:'portal.test',dnsId:100,sport:53000},
  {type:'dns',time:0.024,src:'10.0.0.53',dst:'10.0.0.10',response:true,name:'portal.test',dnsId:100,dport:53000,answers:['198.51.100.20']},
  {type:'tcp',time:0.03,src:'10.0.0.10',dst:'198.51.100.20',sport:51000,dport:80,flags:'S',seq:1000},
- {type:'tcp',time:0.05,src:'198.51.100.20',dst:'10.0.0.10',sport:80,dport:51000,flags:'SA',seq:5000,ack:1001},
+ {type:'tcp',time:0.05,ttl:55,src:'198.51.100.20',dst:'10.0.0.10',sport:80,dport:51000,flags:'SA',seq:5000,ack:1001},
  {type:'tcp',time:0.051,src:'10.0.0.10',dst:'198.51.100.20',sport:51000,dport:80,flags:'A',seq:1001,ack:5001}
 ];
 const filters=[
@@ -16,7 +16,7 @@ const filters=[
  {type:'dns',src:'10.0.0.53',dst:'10.0.0.10',response:true,name:'docs.test',dnsId:101,dport:53000,answers:['198.51.100.30']},
  {type:'dns',src:'10.0.0.11',dst:'10.0.0.53',name:'mail.test',dnsId:102,sport:53001},
  {type:'dns',src:'10.0.0.53',dst:'10.0.0.11',response:true,name:'mail.test',dnsId:102,dport:53001,answers:['198.51.100.31']},
- {type:'ntp',src:'192.0.2.123',dst:'10.0.0.10',mode:4,stratum:2,sport:123,dport:53123},
+ {type:'ntp',ttl:55,src:'192.0.2.123',dst:'10.0.0.10',mode:4,stratum:2,sport:123,dport:53123},
  {type:'icmp',src:'10.0.0.12',dst:'10.0.0.1',icmpType:8,icmpId:7,icmpSeq:1},
  {type:'icmp',src:'10.0.0.1',dst:'10.0.0.12',icmpType:0,icmpId:7,icmpSeq:1}
 ];

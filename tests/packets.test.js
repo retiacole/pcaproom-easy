@@ -1,6 +1,8 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const {execFileSync} = require('node:child_process');
+const path = require('node:path');
 const {buildCapture, transportPayload, pcapBytes, frameBytes} = require('../packet-tools');
 
 function capture(id, packets) { return buildCapture({id, title:id, description:'Protocol fixture validation', packets}); }
@@ -142,4 +144,172 @@ test('PCAP is Ethernet with valid little-endian file header and minimum Ethernet
   const originalFrame=frameBytes(original,0);
   const errorFrame=frameBytes({type:'icmp',icmpType:11,quoted:{...original,frameIndex:0}},1);
   assert.deepEqual(errorFrame.subarray(42,70),originalFrame.subarray(14,42),'ICMP quotes retain original IPv4 and UDP headers byte for byte');
+});
+
+function tcpConversation(clientOptions = {}, serverOptions = {}) {
+  const c = {type:'tcp',src:'10.0.0.10',dst:'198.51.100.20',sport:50123,dport:8080};
+  const s = {type:'tcp',src:c.dst,dst:c.src,sport:c.dport,dport:c.sport};
+  return [
+    {...c,flags:'S',seq:1000,ack:0,...clientOptions},
+    {...s,flags:'SA',seq:9000,ack:1001,...serverOptions},
+    {...c,flags:'A',seq:1001,ack:9001},
+    {...c,flags:'PA',seq:1001,ack:9001,payload:'abc'},
+    {...s,flags:'A',seq:9001,ack:1004},
+    {...c,flags:'FA',seq:1004,ack:9001},
+    {...s,flags:'RA',seq:9001,ack:1005},
+  ];
+}
+
+test('TCP options decode with valid checksums; timestamps echo negotiated values and exclude resets', () => {
+  const c = capture('tcp-options', tcpConversation());
+  healthy(c);
+  for (const n of [1,2]) {
+    assert.equal(first(c,n,'tcp.options.mss_val'),1460);
+    assert.equal(first(c,n,'tcp.options.wscale.multiplier'),128);
+    assert.ok(first(c,n,'tcp.options.sack_perm'));
+    assert.equal(first(c,n,'tcp.hdr_len'),40);
+  }
+  assert.equal(first(c,1,'tcp.options.timestamp.tsecr'),0);
+  assert.equal(first(c,1,'tcp.ack_raw'),0,'Initial SYN does not carry a shifted ACK');
+  assert.equal(first(c,2,'tcp.options.timestamp.tsecr'),first(c,1,'tcp.options.timestamp.tsval'));
+  assert.equal(first(c,3,'tcp.options.timestamp.tsecr'),first(c,2,'tcp.options.timestamp.tsval'));
+  assert.equal(first(c,5,'tcp.options.timestamp.tsecr'),first(c,4,'tcp.options.timestamp.tsval'));
+  for (const n of [3,4,5,6]) {
+    assert.equal(first(c,n,'tcp.hdr_len'),32);
+    assert.ok(first(c,n,'tcp.options.timestamp.tsval'));
+    assert.equal(first(c,n,'tcp.options.mss_val'),undefined);
+  }
+  assert.equal(first(c,7,'tcp.options.timestamp.tsval'),undefined);
+  assert.equal(first(c,7,'tcp.hdr_len'),20);
+});
+
+test('TCP timestamps require both handshake offers; minimal fixtures and disabled options remain possible', () => {
+  const specs = [
+    ...tcpConversation({timestamps:false}).map(p=>({...p,sport:p.sport === 50123 ? 50124 : p.sport,dport:p.dport === 50123 ? 50124 : p.dport})),
+    ...tcpConversation({}, {timestamps:false}),
+    ...tcpConversation({tcpOptions:false}, {tcpOptions:false}).map(p=>({...p,sport:p.sport === 50123 ? 50125 : p.sport,dport:p.dport === 50123 ? 50125 : p.dport})),
+  ];
+  const c = capture('tcp-negotiation', specs);
+  healthy(c);
+  for (let n=1;n<=21;n++) {
+    if (n===8) assert.ok(first(c,n,'tcp.options.timestamp.tsval'),'Client may offer TS even when the server declines');
+    else assert.equal(first(c,n,'tcp.options.timestamp.tsval'),undefined,`No TS in frame ${n}`);
+  }
+  assert.equal(first(c,15,'tcp.hdr_len'),20);
+  assert.equal(first(c,16,'tcp.hdr_len'),20);
+  assert.equal(first(c,16,'tcp.options.wscale.shift'),undefined);
+  const noHandshake = capture('tcp-midstream',[{type:'tcp',flags:'PA',payload:'abc'}]);
+  assert.equal(first(noHandshake,1,'tcp.options.timestamp.tsval'),undefined,'Do not invent unseen timestamp negotiation');
+});
+
+test('deterministic 32-bit sequence translation preserves ACKs, relative counters, reset semantics and raw-wrap streams', () => {
+  const specs=tcpConversation(), c=capture('tcp-sequences',specs);
+  assert.ok(first(c,1,'tcp.seq_raw')>0xffffff);
+  assert.ok(first(c,2,'tcp.seq_raw')>0xffffff);
+  assert.notEqual(first(c,1,'tcp.seq_raw'),first(c,2,'tcp.seq_raw'));
+  assert.equal(first(c,1,'tcp.seq'),0);
+  assert.equal(first(c,2,'tcp.ack_raw'),first(c,1,'tcp.seq_raw')+1);
+  assert.equal(first(c,5,'tcp.ack_raw'),first(c,1,'tcp.seq_raw')+4);
+  assert.equal(first(c,5,'tcp.ack'),4);
+  assert.deepEqual(pcapBytes(specs).pcap,pcapBytes(specs).pcap);
+  assert.equal(specs[0].seq,1000,'Building does not mutate authored specs');
+  const rejected=capture('tcp-reset',[specs[0],{...specs[1],flags:'RA',seq:0}]);
+  assert.equal(first(rejected,2,'tcp.seq_raw'),0);
+  assert.equal(first(rejected,2,'tcp.ack_raw'),first(rejected,1,'tcp.seq_raw')+1);
+  const nearLimit=[...tcpConversation()].slice(0,3).map(p=>({...p,seq:p.seq+0xff0000,ack:p.ack ? p.ack+0xff0000 : 0}));
+  const limitCapture=capture('tcp-offset-limit',nearLimit);
+  assert.equal(first(limitCapture,3,'tcp.seq_raw'),first(limitCapture,1,'tcp.seq_raw')+1,'Small counters cannot wrap after translation');
+  const raw={type:'tcp',sport:50126,dport:8080,rawSequence:true,tcpOptions:false};
+  const wrapped=capture('tcp-raw-wrap',[
+    {...raw,flags:'S',seq:0xfffffffd,ack:0},
+    {...raw,flags:'PA',seq:0xfffffffe,ack:1,payload:'ABCD'},
+    {...raw,flags:'PA',seq:2,ack:1,payload:'EF'},
+  ]);
+  assert.equal(first(wrapped,1,'tcp.seq_raw'),0xfffffffd);
+  assert.equal(wrapped.streams[0].segments[0].text,'ABCDEF');
+});
+
+test('EDNS0 is additional metadata, supports opt-out, and leaves DNS-over-TCP lengths exact', () => {
+  const base={type:'dns',name:'portal.test'}, c=capture('edns',[
+    base,{...base,response:true,answers:['192.0.2.20'],src:'10.0.0.1',dst:'10.0.0.10'},
+    {...base,sport:5353,dport:5353,dst:'224.0.0.251',dnsId:0,dnsFlags:0,edns:false},
+    {...base,response:true,answers:['10.0.0.20'],src:'10.0.0.20',sport:5353,dport:5353,dst:'224.0.0.251',dnsId:0,dnsFlags:0x8400,dnsQuestion:false,edns:false},
+  ]);
+  healthy(c);
+  assert.equal(first(c,1,'dns.count.answers'),0);
+  assert.equal(first(c,1,'dns.count.add_rr'),1);
+  assert.equal(first(c,1,'dns.rr.udp_payload_size'),1232);
+  assert.equal(first(c,2,'dns.count.answers'),1);
+  assert.equal(first(c,2,'dns.count.add_rr'),1);
+  assert.equal(first(c,3,'dns.count.add_rr'),0);
+  assert.equal(first(c,3,'dns.flags'),0,'mDNS query does not request recursion');
+  assert.equal(first(c,3,'dns.resp.edns0_version'),undefined);
+  assert.equal(first(c,4,'dns.count.queries'),0);
+  assert.equal(first(c,4,'dns.count.answers'),1);
+  assert.equal(first(c,4,'dns.resp.name'),'portal.test');
+  assert.equal(first(c,4,'dns.a'),'10.0.0.20');
+  const tcp=transportPayload({...base,transport:'tcp'}), udp=transportPayload(base);
+  assert.equal(tcp.readUInt16BE(0),udp.length);
+  assert.deepEqual(tcp.subarray(2),udp);
+  assert.equal(transportPayload({...base,edns:false}).length,udp.length-11);
+});
+
+test('DHCP client identity and lease timers are realistic, configurable and internally consistent', () => {
+  const c=capture('dhcp-options',[
+    {type:'dhcp',message:1,clientMac:'02:00:00:00:00:42',hostName:'training-42'},
+    {type:'dhcp',message:5,server:'10.0.0.1',yiaddr:'10.0.0.42'},
+    {type:'dhcp',message:1,dhcpOptions:false},
+    {type:'dhcp',message:5,server:'10.0.0.1',yiaddr:'10.0.0.42',leaseTime:7200},
+  ]);
+  healthy(c);
+  for (const code of [61,12,60,57]) assert.ok(c.packets[0].fields['dhcp.option.type'].includes(code));
+  assert.equal(first(c,1,'dhcp.option.hostname'),'training-42');
+  assert.equal(first(c,1,'dhcp.option.dhcp_max_message_size'),1500);
+  assert.ok(c.packets[0].fields['dhcp.option.value'].includes('01020000000042'));
+  assert.equal(first(c,2,'dhcp.option.ip_address_lease_time'),3600);
+  assert.equal(first(c,2,'dhcp.option.renewal_time_value'),1800);
+  assert.equal(first(c,2,'dhcp.option.rebinding_time_value'),3150);
+  assert.equal(first(c,3,'dhcp.option.hostname'),undefined);
+  assert.equal(first(c,4,'dhcp.option.renewal_time_value'),3600);
+  assert.equal(first(c,4,'dhcp.option.rebinding_time_value'),6300);
+  assert.throws(()=>transportPayload({type:'dhcp',message:5,renewalTime:3500,rebindingTime:3100}),/renewal < rebinding/);
+});
+
+test('multicast MACs, router NA flags, ARP fallback, echo payload and sender capture padding match packet semantics', () => {
+  const c=capture('link-details',[
+    {type:'udp',dst:'224.0.0.251',sport:50000,dport:9000},
+    {type:'udp',dst:'239.255.255.250',sport:50000,dport:9000},
+    {type:'icmp6',icmpType:136,src:'fe80::1',dst:'fe80::10',target:'fe80::1',smac:'02:00:00:00:00:01',router:true},
+    {type:'icmp'},
+    {type:'arp',op:2,hwdst:'02:00:00:00:00:42'},
+    {type:'arp',op:2,dmac:'02:00:00:00:00:43'},
+    {type:'tcp',tcpOptions:false,padEthernet:false},
+    {type:'tcp',tcpOptions:false},
+  ]);
+  healthy(c);
+  assert.equal(first(c,1,'eth.dst'),'01:00:5e:00:00:fb');
+  assert.equal(first(c,2,'eth.dst'),'01:00:5e:7f:ff:fa');
+  assert.equal(first(c,3,'icmpv6.nd.na.flag'),0xe0000000);
+  assert.equal(first(c,4,'data.len'),32);
+  assert.equal(Buffer.from(first(c,4,'icmp.data'),'hex').toString(),'abcdefghijklmnopqrstuvwabcdefghi');
+  assert.equal(first(c,5,'eth.dst'),first(c,5,'arp.dst.hw_mac'));
+  assert.equal(first(c,6,'eth.dst'),first(c,6,'arp.dst.hw_mac'));
+  assert.equal(c.packets[6].length,54);
+  assert.equal(c.packets[7].length,60);
+  assert.throws(()=>frameBytes({type:'arp',op:2}),/requires hwdst or dmac/);
+});
+
+test('decoded absolute/delta timestamps come from PCAP, and builds are identical across host timezones/locales', () => {
+  const c=capture('timestamp-data',[{type:'udp',time:.123456},{type:'udp',time:.145678}]);
+  assert.equal(c.packets[0].timestampEpoch,1767225600.123456);
+  assert.equal(c.packets[0].time,0);
+  assert.equal(c.packets[0].timeDelta,0);
+  assert.equal(c.packets[1].timeDelta,.022222);
+  assert.deepEqual(c.packets[1].fields['frame.time_delta'],[.022222]);
+  const script="const {buildCapture}=require('./packet-tools');process.stdout.write(JSON.stringify(buildCapture({id:'zone',title:'Zone fixture',packets:[{type:'udp',time:.123456},{type:'tls',tlsKind:'clientHello',serverName:'portal.test',time:1.234567}]})));";
+  const build = (TZ,LC_ALL) => execFileSync(process.execPath,['-e',script],{cwd:path.join(__dirname,'..'),env:{...process.env,TZ,LC_ALL},encoding:'utf8'});
+  const tokyo=build('Asia/Tokyo','ja_JP.UTF-8'), newYork=build('America/New_York','en_US.UTF-8');
+  assert.equal(tokyo,newYork,'PCAP, tshark fields, display strings and streams are byte-identical');
+  assert.match(tokyo,/UTC/);
+  assert.doesNotMatch(tokyo,/JST|EST|EDT/);
 });

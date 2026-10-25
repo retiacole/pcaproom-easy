@@ -123,8 +123,7 @@ function addEvidence(app, evidence) {
     field = [...app.document.querySelectorAll('.field')].find(node => node.querySelector('.field-key')?.textContent === evidence.field);
   }
   assert.ok(field, `visible detail field ${evidence.field} on frame ${evidence.frame}`);
-  const disclosure = field.closest('details');
-  if (disclosure) disclosure.open = true;
+  for(let disclosure=field.closest('details');disclosure;disclosure=disclosure.parentElement.closest('details'))disclosure.open=true;
   app.click(field);
   assert.ok(app.query('#selected-field').textContent.includes(evidence.field));
   app.click('#add-evidence');
@@ -132,7 +131,7 @@ function addEvidence(app, evidence) {
 }
 function solveLesson(app, lesson) {
   openLesson(app, lesson.id);
-  const targetFilter = lesson.tasks.some(task => task.kind === 'filter') ? filters[lesson.id] : '';
+  const targetFilter = lesson.tasks.some(task => task.kind === 'filter') ? lesson.tasks.find(task=>task.kind==='filter')?.expectedFilter||filters[lesson.id] : '';
   if (lesson.tasks.some(task => task.kind === 'filter')) assert.ok(targetFilter, `semantic official filter for ${lesson.id}`);
   for (const [index, task] of lesson.tasks.entries()) {
     chooseTask(app, index, lesson.tasks.length);
@@ -169,13 +168,13 @@ async function importText(app, content, size = Buffer.byteLength(content)) {
   await new Promise(resolve => setImmediate(resolve));
 }
 
-test('all 45 lessons are solvable through packet, detail, evidence and answer controls; progress reloads', { timeout: 120000 }, () => {
+test('all 51 lessons are solvable through packet, detail, evidence and answer controls; progress reloads', { timeout: 120000 }, () => {
   const app = createApp();
   let reload;
   try {
     const lessons = app.window.PcapData.lessons;
-    assert.equal(lessons.length, 45);
-    assert.equal(app.document.querySelectorAll('.lesson-link').length, 45, 'all lessons accessible from the map');
+    assert.equal(lessons.length, 51);
+    assert.equal(app.document.querySelectorAll('.lesson-link').length, 51, 'all lessons accessible from the map');
     const kinds = new Set();
     let answered = 0;
     for (const [index, lesson] of lessons.entries()) {
@@ -188,21 +187,21 @@ test('all 45 lessons are solvable through packet, detail, evidence and answer co
     assert.deepEqual([...kinds].sort(), ['choice', 'filter', 'order', 'packets', 'text']);
     assert.equal(answered, lessons.reduce((sum, lesson) => sum + lesson.tasks.length, 0), 'every individual task is exercised');
     app.click('[data-action="home"]');
-    assert.equal(app.query('[role="progressbar"]').getAttribute('aria-valuenow'), '45');
-    assert.ok(app.query('.hero-metrics').textContent.includes('4500ポイント'));
-    assert.equal(app.document.querySelectorAll('.lesson-link.done').length, 45);
+    assert.equal(app.query('[role="progressbar"]').getAttribute('aria-valuenow'), '51');
+    assert.ok(app.query('.hero-metrics').textContent.includes('5100ポイント'));
+    assert.equal(app.document.querySelectorAll('.lesson-link.done').length, 51);
 
     // Learners may explore a different filter after winning a flag. The saved
     // completion proof must survive, even when their current view no longer
     // matches the original answer to a filter exercise.
     openLesson(app, 'ops-filter-1');
     applyFilter(app, 'frame.number == 1');
-    assert.equal(completed(saved(app)), 45);
+    assert.equal(completed(saved(app)), 51);
     const snapshot = new Map(app.storage);
     app.dom.window.close();
     reload = createRestoredApp(snapshot);
-    assert.equal(reload.query('#top-count').textContent, '45');
-    assert.equal(reload.document.querySelectorAll('.lesson-link.done').length, 45);
+    assert.equal(reload.query('#top-count').textContent, '51');
+    assert.equal(reload.document.querySelectorAll('.lesson-link.done').length, 51);
     openLesson(reload, 'ops-filter-1');
     assert.equal(reload.query('#filter-input').value, 'frame.number == 1');
     assert.ok(reload.query('#completion-area').textContent.includes('100ポイント'), 'completion remains after exploratory filter edit and reload');
@@ -214,6 +213,58 @@ test('all 45 lessons are solvable through packet, detail, evidence and answer co
 function createRestoredApp(storage) {
   return createApp({ storage, expectedFlags: completed(JSON.parse(storage.get(STORE))) });
 }
+
+test('time modes persist, selected fields prepare filters, and chapter endings transfer to Wireshark',()=>{
+ const app=createApp();let restored;
+ try{
+  openLesson(app,'ops-filter-3');
+  applyFilter(app,'frame.number == 1 || frame.number == 3');
+  app.change('#time-mode','utc');
+  assert.match(app.query('#packet-list tbody tr td:nth-child(2)').textContent,/^2026-01-01 00:00:00\./);
+  assert.equal(app.query('#packet-list th:nth-child(2)').textContent,'Time (UTC)');
+  app.change('#time-mode','delta');
+  const capture=app.window.PcapData.captures.find(c=>c.id==='ops-mixed');
+  const third=capture.packets[2];
+  assert.equal(app.query('#packet-list tbody tr:nth-child(2) td:nth-child(2)').textContent,Number(third.fields['frame.time_delta'][0]).toFixed(6));
+  app.click('[data-packet="1"]');
+  const field=[...app.document.querySelectorAll('.field')].find(n=>n.querySelector('.field-key')?.textContent==='dns.qry.name');
+  app.click(field);
+  assert.match(app.query('#field-status').textContent,/dns\.qry\.name/);
+  app.click('#field-filter');
+  const expression=app.query('#filter-input').value;
+  assert.match(expression,/^dns\.qry\.name == "/);
+  assert.deepEqual(visibleFrames(app),[1,3],'preparing a filter does not apply it yet');
+  applyFilter(app,expression);
+  const frames=visibleFrames(app);
+  app.click('[data-action="wireshark"]');
+  assert.ok(app.query('#modal-content').textContent.includes(expression));
+  assert.ok(app.query('#modal-content').textContent.includes(frames.join(', ')));
+  app.click('#modal-content [data-action="pcap"]');
+  assert.equal(app.downloads.at(-1).name,'ops-mixed.pcap');
+  const snapshot=new Map(app.storage);app.window.close();
+  restored=createRestoredApp(snapshot);openLesson(restored,'ops-filter-3');
+  assert.equal(restored.query('#time-mode').value,'delta');
+  openLesson(restored,'realworld-time');restored.click('[data-packet="2"]');
+  const bytes=[...restored.document.querySelectorAll('.field')].find(n=>n.querySelector('.field-key')?.textContent==='eth.padding');
+  restored.click(bytes);restored.click('#field-filter');
+  assert.equal(restored.query('#filter-input').value,'eth.padding','byte fields prepare a presence filter, never a quoted hex string');
+  applyFilter(restored,'eth.padding');assert.deepEqual(visibleFrames(restored),[2]);
+  assert.equal(restored.errors.length,0);
+ }finally{app.window.close();restored?.window.close();}
+});
+
+test('TCP Options disclosure remains open while selecting an option and highlights its bytes',()=>{
+ const app=createApp();try{
+  openLesson(app,'app-tcp-01');
+  app.click('[data-packet="2"]');
+  app.query('.tcp-options').open=true;
+  const field=[...app.document.querySelectorAll('.tcp-options .field')].find(n=>n.querySelector('.field-key')?.textContent==='tcp.options.mss_val');
+  app.click(field);
+  assert.equal(app.query('.tcp-options').open,true);
+  assert.match(app.query('#field-status').textContent,/tcp\.options\.mss_val/);
+  assert.ok(app.document.querySelectorAll('.hex-byte.marked').length>0);
+ }finally{app.window.close();}
+});
 
 test('hints, solutions, blank evidence and unrelated evidence do not award flags', () => {
   const app = createApp();

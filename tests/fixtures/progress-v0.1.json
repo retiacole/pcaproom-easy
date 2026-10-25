@@ -1,0 +1,2152 @@
+{
+  "schemaVersion": 1,
+  "app": "pcaproom-easy",
+  "currentLesson": null,
+  "lessons": {
+    "ops-view-1": {
+      "answers": {
+        "source": {
+          "answer": "10.0.0.10",
+          "evidence": [
+            {
+              "frame": 1,
+              "field": "ip.src"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "source": {
+            "answer": "10.0.0.10",
+            "evidence": [
+              {
+                "frame": 1,
+                "field": "ip.src"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "ops-view-2": {
+      "answers": {
+        "query": {
+          "answer": "portal.test",
+          "evidence": [
+            {
+              "frame": 1,
+              "field": "dns.qry.name"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "query": {
+            "answer": "portal.test",
+            "evidence": [
+              {
+                "frame": 1,
+                "field": "dns.qry.name"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "ops-view-3": {
+      "answers": {
+        "destination": {
+          "answer": "10.0.0.10",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "ip.dst"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "destination": {
+            "answer": "10.0.0.10",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "ip.dst"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "ops-filter-1": {
+      "answers": {
+        "filter": {
+          "answer": [
+            1,
+            3,
+            4,
+            5
+          ],
+          "evidence": []
+        }
+      },
+      "filter": "dns",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "filter": {
+            "answer": [
+              1,
+              3,
+              4,
+              5
+            ],
+            "evidence": []
+          }
+        },
+        "filter": "dns"
+      }
+    },
+    "ops-filter-2": {
+      "answers": {
+        "filter": {
+          "answer": [
+            4
+          ],
+          "evidence": []
+        }
+      },
+      "filter": "dns && ip.src == 10.0.0.11",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "filter": {
+            "answer": [
+              4
+            ],
+            "evidence": []
+          }
+        },
+        "filter": "dns && ip.src == 10.0.0.11"
+      }
+    },
+    "ops-filter-3": {
+      "answers": {
+        "filter": {
+          "answer": [
+            1,
+            3
+          ],
+          "evidence": []
+        }
+      },
+      "filter": "dns && ip.addr == 10.0.0.10",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "filter": {
+            "answer": [
+              1,
+              3
+            ],
+            "evidence": []
+          }
+        },
+        "filter": "dns && ip.addr == 10.0.0.10"
+      }
+    },
+    "base-ethernet-1": {
+      "answers": {
+        "base-ethernet-1-src": {
+          "answer": "02:10:00:00:00:20",
+          "evidence": [
+            {
+              "frame": 1,
+              "field": "eth.src"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-ethernet-1-src": {
+            "answer": "02:10:00:00:00:20",
+            "evidence": [
+              {
+                "frame": 1,
+                "field": "eth.src"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-ethernet-2": {
+      "answers": {
+        "base-ethernet-2-broadcast": {
+          "answer": [
+            2
+          ],
+          "evidence": []
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-ethernet-2-broadcast": {
+            "answer": [
+              2
+            ],
+            "evidence": []
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-ethernet-3": {
+      "answers": {
+        "base-ethernet-3-mac": {
+          "answer": "02:10:00:00:03:01",
+          "evidence": [
+            {
+              "frame": 3,
+              "field": "eth.dst"
+            }
+          ]
+        },
+        "base-ethernet-3-ip": {
+          "answer": "192.0.2.80",
+          "evidence": [
+            {
+              "frame": 3,
+              "field": "ip.dst"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-ethernet-3-mac": {
+            "answer": "02:10:00:00:03:01",
+            "evidence": [
+              {
+                "frame": 3,
+                "field": "eth.dst"
+              }
+            ]
+          },
+          "base-ethernet-3-ip": {
+            "answer": "192.0.2.80",
+            "evidence": [
+              {
+                "frame": 3,
+                "field": "ip.dst"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-arp-1": {
+      "answers": {
+        "base-arp-1-target": {
+          "answer": "10.20.1.1",
+          "evidence": [
+            {
+              "frame": 1,
+              "field": "arp.dst.proto_ipv4"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-arp-1-target": {
+            "answer": "10.20.1.1",
+            "evidence": [
+              {
+                "frame": 1,
+                "field": "arp.dst.proto_ipv4"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-arp-2": {
+      "answers": {
+        "base-arp-2-mac": {
+          "answer": "02:20:00:00:02:60",
+          "evidence": [
+            {
+              "frame": 3,
+              "field": "arp.src.proto_ipv4"
+            },
+            {
+              "frame": 3,
+              "field": "arp.src.hw_mac"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-arp-2-mac": {
+            "answer": "02:20:00:00:02:60",
+            "evidence": [
+              {
+                "frame": 3,
+                "field": "arp.src.proto_ipv4"
+              },
+              {
+                "frame": 3,
+                "field": "arp.src.hw_mac"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-arp-3": {
+      "answers": {
+        "base-arp-3-order": {
+          "answer": [
+            2,
+            4
+          ],
+          "evidence": []
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-arp-3-order": {
+            "answer": [
+              2,
+              4
+            ],
+            "evidence": []
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-ip-1": {
+      "answers": {
+        "base-ip-1-src": {
+          "answer": "10.30.1.21",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "ip.src"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-ip-1-src": {
+            "answer": "10.30.1.21",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "ip.src"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-ip-2": {
+      "answers": {
+        "base-ip-2-dst": {
+          "answer": "2001:db8:30::80",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "ipv6.dst"
+            }
+          ]
+        },
+        "base-ip-2-hop": {
+          "answer": "32",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "ipv6.hlim"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-ip-2-dst": {
+            "answer": "2001:db8:30::80",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "ipv6.dst"
+              }
+            ]
+          },
+          "base-ip-2-hop": {
+            "answer": "32",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "ipv6.hlim"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-ip-3": {
+      "answers": {
+        "base-ip-3-select": {
+          "answer": [
+            2,
+            5
+          ],
+          "evidence": []
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-ip-3-select": {
+            "answer": [
+              2,
+              5
+            ],
+            "evidence": []
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-icmp-1": {
+      "answers": {
+        "base-icmp-1-pair": {
+          "answer": [
+            1,
+            3
+          ],
+          "evidence": []
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-icmp-1-pair": {
+            "answer": [
+              1,
+              3
+            ],
+            "evidence": []
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-icmp-2": {
+      "answers": {
+        "base-icmp-2-meaning": {
+          "answer": "port-unreachable",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "icmp.type"
+            },
+            {
+              "frame": 2,
+              "field": "icmp.code"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-icmp-2-meaning": {
+            "answer": "port-unreachable",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "icmp.type"
+              },
+              {
+                "frame": 2,
+                "field": "icmp.code"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-icmp-3": {
+      "answers": {
+        "base-icmp-3-ttl": {
+          "answer": "1",
+          "evidence": [
+            {
+              "frame": 1,
+              "field": "ip.ttl"
+            }
+          ]
+        },
+        "base-icmp-3-reason": {
+          "answer": "transit-expired",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "icmp.type"
+            },
+            {
+              "frame": 2,
+              "field": "icmp.code"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-icmp-3-ttl": {
+            "answer": "1",
+            "evidence": [
+              {
+                "frame": 1,
+                "field": "ip.ttl"
+              }
+            ]
+          },
+          "base-icmp-3-reason": {
+            "answer": "transit-expired",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "icmp.type"
+              },
+              {
+                "frame": 2,
+                "field": "icmp.code"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-icmp6-1": {
+      "answers": {
+        "base-icmp6-1-reply": {
+          "answer": [
+            3
+          ],
+          "evidence": []
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-icmp6-1-reply": {
+            "answer": [
+              3
+            ],
+            "evidence": []
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-icmp6-2": {
+      "answers": {
+        "base-icmp6-2-target": {
+          "answer": "fe80::1",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "icmpv6.nd.ns.target_address"
+            }
+          ]
+        },
+        "base-icmp6-2-pair": {
+          "answer": [
+            2,
+            4
+          ],
+          "evidence": []
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-icmp6-2-target": {
+            "answer": "fe80::1",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "icmpv6.nd.ns.target_address"
+              }
+            ]
+          },
+          "base-icmp6-2-pair": {
+            "answer": [
+              2,
+              4
+            ],
+            "evidence": []
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-icmp6-3": {
+      "answers": {
+        "base-icmp6-3-ra": {
+          "answer": [
+            2
+          ],
+          "evidence": []
+        },
+        "base-icmp6-3-lifetime": {
+          "answer": "1800",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "icmpv6.nd.ra.router_lifetime"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-icmp6-3-ra": {
+            "answer": [
+              2
+            ],
+            "evidence": []
+          },
+          "base-icmp6-3-lifetime": {
+            "answer": "1800",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "icmpv6.nd.ra.router_lifetime"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-udp-1": {
+      "answers": {
+        "base-udp-1-service": {
+          "answer": "7070",
+          "evidence": [
+            {
+              "frame": 1,
+              "field": "udp.dstport"
+            }
+          ]
+        },
+        "base-udp-1-reply": {
+          "answer": "56018",
+          "evidence": [
+            {
+              "frame": 3,
+              "field": "udp.dstport"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-udp-1-service": {
+            "answer": "7070",
+            "evidence": [
+              {
+                "frame": 1,
+                "field": "udp.dstport"
+              }
+            ]
+          },
+          "base-udp-1-reply": {
+            "answer": "56018",
+            "evidence": [
+              {
+                "frame": 3,
+                "field": "udp.dstport"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-udp-2": {
+      "answers": {
+        "base-udp-2-size": {
+          "answer": "4",
+          "evidence": [
+            {
+              "frame": 1,
+              "field": "udp.length"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-udp-2-size": {
+            "answer": "4",
+            "evidence": [
+              {
+                "frame": 1,
+                "field": "udp.length"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "base-udp-3": {
+      "answers": {
+        "base-udp-3-requests": {
+          "answer": [
+            1,
+            3
+          ],
+          "evidence": []
+        },
+        "base-udp-3-observation": {
+          "answer": "observed-count",
+          "evidence": [
+            {
+              "frame": 1,
+              "field": "frame.number"
+            },
+            {
+              "frame": 3,
+              "field": "frame.number"
+            },
+            {
+              "frame": 4,
+              "field": "frame.number"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "base-udp-3-requests": {
+            "answer": [
+              1,
+              3
+            ],
+            "evidence": []
+          },
+          "base-udp-3-observation": {
+            "answer": "observed-count",
+            "evidence": [
+              {
+                "frame": 1,
+                "field": "frame.number"
+              },
+              {
+                "frame": 3,
+                "field": "frame.number"
+              },
+              {
+                "frame": 4,
+                "field": "frame.number"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-tcp-01": {
+      "answers": {
+        "client": {
+          "answer": "10.0.0.10",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "ip.src"
+            }
+          ]
+        },
+        "handshake": {
+          "answer": [
+            2,
+            4,
+            5
+          ],
+          "evidence": []
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "client": {
+            "answer": "10.0.0.10",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "ip.src"
+              }
+            ]
+          },
+          "handshake": {
+            "answer": [
+              2,
+              4,
+              5
+            ],
+            "evidence": []
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-tcp-02": {
+      "answers": {
+        "length": {
+          "answer": "5",
+          "evidence": [
+            {
+              "frame": 4,
+              "field": "tcp.len"
+            }
+          ]
+        },
+        "ack": {
+          "answer": "6",
+          "evidence": [
+            {
+              "frame": 5,
+              "field": "tcp.ack"
+            }
+          ]
+        },
+        "conversation": {
+          "answer": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8
+          ],
+          "evidence": []
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "length": {
+            "answer": "5",
+            "evidence": [
+              {
+                "frame": 4,
+                "field": "tcp.len"
+              }
+            ]
+          },
+          "ack": {
+            "answer": "6",
+            "evidence": [
+              {
+                "frame": 5,
+                "field": "tcp.ack"
+              }
+            ]
+          },
+          "conversation": {
+            "answer": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              7,
+              8
+            ],
+            "evidence": []
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-tcp-03": {
+      "answers": {
+        "close": {
+          "answer": [
+            4,
+            5,
+            6,
+            7
+          ],
+          "evidence": []
+        },
+        "reset": {
+          "answer": [
+            12
+          ],
+          "evidence": []
+        },
+        "conclusion": {
+          "answer": "reset-seen",
+          "evidence": [
+            {
+              "frame": 12,
+              "field": "tcp.flags.reset"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "close": {
+            "answer": [
+              4,
+              5,
+              6,
+              7
+            ],
+            "evidence": []
+          },
+          "reset": {
+            "answer": [
+              12
+            ],
+            "evidence": []
+          },
+          "conclusion": {
+            "answer": "reset-seen",
+            "evidence": [
+              {
+                "frame": 12,
+                "field": "tcp.flags.reset"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-dns-01": {
+      "answers": {
+        "name": {
+          "answer": "portal.test",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "dns.qry.name"
+            }
+          ]
+        },
+        "address": {
+          "answer": "192.0.2.80",
+          "evidence": [
+            {
+              "frame": 3,
+              "field": "dns.a"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "name": {
+            "answer": "portal.test",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "dns.qry.name"
+              }
+            ]
+          },
+          "address": {
+            "answer": "192.0.2.80",
+            "evidence": [
+              {
+                "frame": 3,
+                "field": "dns.a"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-dns-02": {
+      "answers": {
+        "aaaa": {
+          "answer": "2001:db8:20::80",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "dns.aaaa"
+            }
+          ]
+        },
+        "nxdomain": {
+          "answer": "name-missing",
+          "evidence": [
+            {
+              "frame": 4,
+              "field": "dns.flags.rcode"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "aaaa": {
+            "answer": "2001:db8:20::80",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "dns.aaaa"
+              }
+            ]
+          },
+          "nxdomain": {
+            "answer": "name-missing",
+            "evidence": [
+              {
+                "frame": 4,
+                "field": "dns.flags.rcode"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-dns-03": {
+      "answers": {
+        "filter": {
+          "answer": [
+            6,
+            8
+          ],
+          "evidence": []
+        },
+        "reply": {
+          "answer": "192.0.2.44",
+          "evidence": [
+            {
+              "frame": 8,
+              "field": "dns.a"
+            }
+          ]
+        },
+        "port": {
+          "answer": "53",
+          "evidence": [
+            {
+              "frame": 6,
+              "field": "tcp.dstport"
+            }
+          ]
+        }
+      },
+      "filter": "dns && tcp",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "filter": {
+            "answer": [
+              6,
+              8
+            ],
+            "evidence": []
+          },
+          "reply": {
+            "answer": "192.0.2.44",
+            "evidence": [
+              {
+                "frame": 8,
+                "field": "dns.a"
+              }
+            ]
+          },
+          "port": {
+            "answer": "53",
+            "evidence": [
+              {
+                "frame": 6,
+                "field": "tcp.dstport"
+              }
+            ]
+          }
+        },
+        "filter": "dns && tcp"
+      }
+    },
+    "app-dhcp-01": {
+      "answers": {
+        "dora": {
+          "answer": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "evidence": []
+        },
+        "allocated": {
+          "answer": "10.20.0.42",
+          "evidence": [
+            {
+              "frame": 4,
+              "field": "dhcp.ip.your"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "dora": {
+            "answer": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "evidence": []
+          },
+          "allocated": {
+            "answer": "10.20.0.42",
+            "evidence": [
+              {
+                "frame": 4,
+                "field": "dhcp.ip.your"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-dhcp-02": {
+      "answers": {
+        "router": {
+          "answer": "10.20.0.254",
+          "evidence": [
+            {
+              "frame": 7,
+              "field": "dhcp.option.router"
+            }
+          ]
+        },
+        "dns": {
+          "answer": "10.20.0.53",
+          "evidence": [
+            {
+              "frame": 7,
+              "field": "dhcp.option.domain_name_server"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "router": {
+            "answer": "10.20.0.254",
+            "evidence": [
+              {
+                "frame": 7,
+                "field": "dhcp.option.router"
+              }
+            ]
+          },
+          "dns": {
+            "answer": "10.20.0.53",
+            "evidence": [
+              {
+                "frame": 7,
+                "field": "dhcp.option.domain_name_server"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-dhcp-03": {
+      "answers": {
+        "chosen": {
+          "answer": "10.30.0.1",
+          "evidence": [
+            {
+              "frame": 4,
+              "field": "dhcp.option.dhcp_server_id"
+            }
+          ]
+        },
+        "final": {
+          "answer": "10.30.0.20",
+          "evidence": [
+            {
+              "frame": 5,
+              "field": "dhcp.ip.your"
+            }
+          ]
+        },
+        "ack-only": {
+          "answer": [
+            5
+          ],
+          "evidence": []
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "chosen": {
+            "answer": "10.30.0.1",
+            "evidence": [
+              {
+                "frame": 4,
+                "field": "dhcp.option.dhcp_server_id"
+              }
+            ]
+          },
+          "final": {
+            "answer": "10.30.0.20",
+            "evidence": [
+              {
+                "frame": 5,
+                "field": "dhcp.ip.your"
+              }
+            ]
+          },
+          "ack-only": {
+            "answer": [
+              5
+            ],
+            "evidence": []
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-ntp-01": {
+      "answers": {
+        "server": {
+          "answer": "10.0.0.123",
+          "evidence": [
+            {
+              "frame": 3,
+              "field": "ip.dst"
+            }
+          ]
+        },
+        "reply": {
+          "answer": [
+            4
+          ],
+          "evidence": []
+        },
+        "mode": {
+          "answer": "4",
+          "evidence": [
+            {
+              "frame": 4,
+              "field": "ntp.flags.mode"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "server": {
+            "answer": "10.0.0.123",
+            "evidence": [
+              {
+                "frame": 3,
+                "field": "ip.dst"
+              }
+            ]
+          },
+          "reply": {
+            "answer": [
+              4
+            ],
+            "evidence": []
+          },
+          "mode": {
+            "answer": "4",
+            "evidence": [
+              {
+                "frame": 4,
+                "field": "ntp.flags.mode"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-ntp-02": {
+      "answers": {
+        "stratum": {
+          "answer": "2",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "ntp.stratum"
+            }
+          ]
+        },
+        "meaning": {
+          "answer": "hierarchy",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "ntp.stratum"
+            },
+            {
+              "frame": 4,
+              "field": "ntp.stratum"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "stratum": {
+            "answer": "2",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "ntp.stratum"
+              }
+            ]
+          },
+          "meaning": {
+            "answer": "hierarchy",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "ntp.stratum"
+              },
+              {
+                "frame": 4,
+                "field": "ntp.stratum"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-ntp-03": {
+      "answers": {
+        "requests": {
+          "answer": [
+            1,
+            4
+          ],
+          "evidence": []
+        },
+        "report": {
+          "answer": "not-observed",
+          "evidence": [
+            {
+              "frame": 1,
+              "field": "ntp.flags.mode"
+            },
+            {
+              "frame": 4,
+              "field": "ntp.flags.mode"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "requests": {
+            "answer": [
+              1,
+              4
+            ],
+            "evidence": []
+          },
+          "report": {
+            "answer": "not-observed",
+            "evidence": [
+              {
+                "frame": 1,
+                "field": "ntp.flags.mode"
+              },
+              {
+                "frame": 4,
+                "field": "ntp.flags.mode"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-http-01": {
+      "answers": {
+        "path": {
+          "answer": "/index.html",
+          "evidence": [
+            {
+              "frame": 4,
+              "field": "http.request.uri"
+            }
+          ]
+        },
+        "status": {
+          "answer": "200",
+          "evidence": [
+            {
+              "frame": 6,
+              "field": "http.response.code"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "path": {
+            "answer": "/index.html",
+            "evidence": [
+              {
+                "frame": 4,
+                "field": "http.request.uri"
+              }
+            ]
+          },
+          "status": {
+            "answer": "200",
+            "evidence": [
+              {
+                "frame": 6,
+                "field": "http.response.code"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-http-02": {
+      "answers": {
+        "method": {
+          "answer": "POST",
+          "evidence": [
+            {
+              "frame": 11,
+              "field": "http.request.method"
+            }
+          ]
+        },
+        "get-status": {
+          "answer": "404",
+          "evidence": [
+            {
+              "frame": 6,
+              "field": "http.response.code"
+            }
+          ]
+        },
+        "404-meaning": {
+          "answer": "http-response",
+          "evidence": [
+            {
+              "frame": 6,
+              "field": "http.response.code"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "method": {
+            "answer": "POST",
+            "evidence": [
+              {
+                "frame": 11,
+                "field": "http.request.method"
+              }
+            ]
+          },
+          "get-status": {
+            "answer": "404",
+            "evidence": [
+              {
+                "frame": 6,
+                "field": "http.response.code"
+              }
+            ]
+          },
+          "404-meaning": {
+            "answer": "http-response",
+            "evidence": [
+              {
+                "frame": 6,
+                "field": "http.response.code"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-http-03": {
+      "answers": {
+        "segments": {
+          "answer": [
+            6,
+            8
+          ],
+          "evidence": []
+        },
+        "reassembled": {
+          "answer": "200",
+          "evidence": [
+            {
+              "frame": 8,
+              "field": "http.response.code"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "segments": {
+            "answer": [
+              6,
+              8
+            ],
+            "evidence": []
+          },
+          "reassembled": {
+            "answer": "200",
+            "evidence": [
+              {
+                "frame": 8,
+                "field": "http.response.code"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-tls-01": {
+      "answers": {
+        "sni": {
+          "answer": "secure.test",
+          "evidence": [
+            {
+              "frame": 4,
+              "field": "tls.handshake.extensions_server_name"
+            }
+          ]
+        },
+        "destination": {
+          "answer": "198.51.100.80",
+          "evidence": [
+            {
+              "frame": 4,
+              "field": "ip.dst"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "sni": {
+            "answer": "secure.test",
+            "evidence": [
+              {
+                "frame": 4,
+                "field": "tls.handshake.extensions_server_name"
+              }
+            ]
+          },
+          "destination": {
+            "answer": "198.51.100.80",
+            "evidence": [
+              {
+                "frame": 4,
+                "field": "ip.dst"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-tls-02": {
+      "answers": {
+        "sender": {
+          "answer": "198.51.100.81",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "ip.src"
+            }
+          ]
+        },
+        "path-limit": {
+          "answer": "cannot-read",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "tls.record.content_type"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "sender": {
+            "answer": "198.51.100.81",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "ip.src"
+              }
+            ]
+          },
+          "path-limit": {
+            "answer": "cannot-read",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "tls.record.content_type"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "app-tls-03": {
+      "answers": {
+        "visible-name": {
+          "answer": [
+            4
+          ],
+          "evidence": []
+        },
+        "nameless-ip": {
+          "answer": "198.51.100.83",
+          "evidence": [
+            {
+              "frame": 9,
+              "field": "ip.dst"
+            }
+          ]
+        },
+        "interpret": {
+          "answer": "limited",
+          "evidence": [
+            {
+              "frame": 9,
+              "field": "tls.handshake.type"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "visible-name": {
+            "answer": [
+              4
+            ],
+            "evidence": []
+          },
+          "nameless-ip": {
+            "answer": "198.51.100.83",
+            "evidence": [
+              {
+                "frame": 9,
+                "field": "ip.dst"
+              }
+            ]
+          },
+          "interpret": {
+            "answer": "limited",
+            "evidence": [
+              {
+                "frame": 9,
+                "field": "tls.handshake.type"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "grad-1": {
+      "answers": {
+        "assigned": {
+          "answer": "10.0.0.45",
+          "evidence": [
+            {
+              "frame": 4,
+              "field": "dhcp.ip.your"
+            }
+          ]
+        },
+        "dns-server": {
+          "answer": "10.0.0.53",
+          "evidence": [
+            {
+              "frame": 4,
+              "field": "dhcp.option.domain_name_server"
+            }
+          ]
+        },
+        "resolved": {
+          "answer": "192.0.2.80",
+          "evidence": [
+            {
+              "frame": 8,
+              "field": "dns.a"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "assigned": {
+            "answer": "10.0.0.45",
+            "evidence": [
+              {
+                "frame": 4,
+                "field": "dhcp.ip.your"
+              }
+            ]
+          },
+          "dns-server": {
+            "answer": "10.0.0.53",
+            "evidence": [
+              {
+                "frame": 4,
+                "field": "dhcp.option.domain_name_server"
+              }
+            ]
+          },
+          "resolved": {
+            "answer": "192.0.2.80",
+            "evidence": [
+              {
+                "frame": 8,
+                "field": "dns.a"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "grad-2": {
+      "answers": {
+        "ping": {
+          "answer": "reply",
+          "evidence": [
+            {
+              "frame": 2,
+              "field": "icmp.type"
+            }
+          ]
+        },
+        "name": {
+          "answer": "192.0.2.80",
+          "evidence": [
+            {
+              "frame": 4,
+              "field": "dns.a"
+            }
+          ]
+        },
+        "connection": {
+          "answer": "reset",
+          "evidence": [
+            {
+              "frame": 6,
+              "field": "tcp.flags.reset"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "ping": {
+            "answer": "reply",
+            "evidence": [
+              {
+                "frame": 2,
+                "field": "icmp.type"
+              }
+            ]
+          },
+          "name": {
+            "answer": "192.0.2.80",
+            "evidence": [
+              {
+                "frame": 4,
+                "field": "dns.a"
+              }
+            ]
+          },
+          "connection": {
+            "answer": "reset",
+            "evidence": [
+              {
+                "frame": 6,
+                "field": "tcp.flags.reset"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    },
+    "grad-3": {
+      "answers": {
+        "path": {
+          "answer": "/guide",
+          "evidence": [
+            {
+              "frame": 6,
+              "field": "http.request.uri"
+            }
+          ]
+        },
+        "status": {
+          "answer": "200",
+          "evidence": [
+            {
+              "frame": 7,
+              "field": "http.response.code"
+            }
+          ]
+        },
+        "limit": {
+          "answer": "sni",
+          "evidence": [
+            {
+              "frame": 12,
+              "field": "tls.handshake.extensions_server_name"
+            }
+          ]
+        }
+      },
+      "filter": "",
+      "hints": 0,
+      "solutionSeen": false,
+      "complete": true,
+      "completedAt": "2026-10-25T00:00:00Z",
+      "selected": 1,
+      "proof": {
+        "answers": {
+          "path": {
+            "answer": "/guide",
+            "evidence": [
+              {
+                "frame": 6,
+                "field": "http.request.uri"
+              }
+            ]
+          },
+          "status": {
+            "answer": "200",
+            "evidence": [
+              {
+                "frame": 7,
+                "field": "http.response.code"
+              }
+            ]
+          },
+          "limit": {
+            "answer": "sni",
+            "evidence": [
+              {
+                "frame": 12,
+                "field": "tls.handshake.extensions_server_name"
+              }
+            ]
+          }
+        },
+        "filter": ""
+      }
+    }
+  }
+}

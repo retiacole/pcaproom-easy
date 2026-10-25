@@ -49,6 +49,13 @@
    const op=take(),rhs=take();
    if(rhs===undefined||['&&','||','and','or','not','contains',')','(','==','!=','>','<','>=','<=','!'].includes(rhs))throw new FilterError('比較する値を入力してください。');
    const val=typeof rhs==='object'?rhs.string:scalar(rhs);
+   if(name==='frame'&&op==='contains'){
+    if(typeof rhs!=='object')throw new FilterError('frame contains の検索語は二重引用符で囲んでください。');
+    let hex;try{hex=encodeURIComponent(val).replace(/%([0-9a-f]{2})|([^%])/gi,(_,byte,char)=>byte||char.charCodeAt(0).toString(16).padStart(2,'0')).toLowerCase();}catch{throw new FilterError('検索語の文字を確認してください。');}
+    if(!hex)throw new FilterError('検索語を入力してください。');
+    // Match captured bytes at byte boundaries, never decoded/reassembled text.
+    return p=>{const raw=(p.rawHex||'').toLowerCase();for(let i=raw.indexOf(hex);i>=0;i=raw.indexOf(hex,i+1))if(i%2===0)return true;return false;};
+   }
    if(typeof rhs!=='object'&&known.has(rhs))throw new FilterError('この教材では、右辺にはIP・数値・引用符付きの文字列を指定してください。');
    const observed=packets.flatMap(p=>fieldValues(p,name));
    const isNumeric=observed.length&&observed.every(v=>typeof v==='number'||typeof v==='boolean');
@@ -97,7 +104,16 @@
   return {correct:true,reason:task.why||'パケットに記録された内容と一致しています。'};
  }
  function emptyProgress(){return {schemaVersion:VERSION,app:'pcaproom-easy',currentLesson:null,lessons:{}};}
- function emptyLesson(){return {answers:{},filter:'',hints:0,solutionSeen:false,complete:false,completedAt:null,selected:1};}
+ function emptyLesson(){return {answers:{},filter:'',timeMode:'relative',hints:0,solutionSeen:false,complete:false,completedAt:null,selected:1};}
+ function formatTime(packet,mode='relative'){
+  if(mode==='utc'){
+   const epoch=packet.timestampEpoch??fieldValues(packet,'frame.time_epoch')[0],micros=Math.round(Number(epoch)*1000000);
+   if(!Number.isFinite(micros))return '—';
+   const seconds=Math.floor(micros/1000000);
+   return new Date(seconds*1000).toISOString().slice(0,19).replace('T',' ')+'.'+String(micros-seconds*1000000).padStart(6,'0');
+  }
+  return Number(mode==='delta'?(packet.timeDelta??fieldValues(packet,'frame.time_delta')[0]??0):packet.time).toFixed(6);
+ }
  function hydrate(raw,data){
   if(!raw||raw.app!=='pcaproom-easy'||raw.schemaVersion!==VERSION||typeof raw.lessons!=='object'||!raw.lessons||Array.isArray(raw.lessons))throw new Error('pcaproom-easyの保存ファイルではないか、対応していない版です。');
   const result=emptyProgress();
@@ -106,6 +122,7 @@
    const from=raw.lessons[lesson.id];if(!from||typeof from!=='object')continue;
    const state=emptyLesson(),capture=data.captures.find(c=>c.id===lesson.captureId);
    state.filter=typeof from.filter==='string'?from.filter.slice(0,2000):'';
+   state.timeMode=['relative','utc','delta'].includes(from.timeMode)?from.timeMode:'relative';
    try{compileFilter(state.filter,capture.packets);}catch{state.filter='';}
    state.hints=Number.isInteger(from.hints)?Math.min(3,Math.max(0,from.hints)):0;
    state.solutionSeen=from.solutionSeen===true;
@@ -129,7 +146,7 @@
  }
  function validateData(data){
   const errors=[],ids=new Set(),caps=new Map(data.captures.map(c=>[c.id,c]));
-  if(data.lessons.length!==45)errors.push(`45 lessons required, got ${data.lessons.length}`);
+  if(!data.lessons.length)errors.push('At least one lesson is required');
   for(const lesson of data.lessons){
    if(ids.has(lesson.id))errors.push(`Duplicate lesson ${lesson.id}`);ids.add(lesson.id);
    if(!data.chapters.some(c=>c.id===lesson.chapter))errors.push(`Missing chapter ${lesson.id}`);
@@ -144,6 +161,6 @@
   }
   return errors;
  }
- const API={FilterError,tokenize,fieldValues,compileFilter,filterPackets,normalize,sameSet,gradeTask,emptyProgress,emptyLesson,hydrate,validateData};
+ const API={FilterError,tokenize,fieldValues,compileFilter,filterPackets,normalize,sameSet,gradeTask,emptyProgress,emptyLesson,formatTime,hydrate,validateData};
  root.PcapEngine=API;if(typeof module!=='undefined')module.exports=API;
 })(globalThis);

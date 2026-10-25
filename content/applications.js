@@ -33,7 +33,9 @@ function selectTask(id, prompt, answer, why, kind = 'packets') {
 }
 function add(id, chapter, title, level, intro, mission, hints, explanation, packets, tasks, description) {
   const captureId = `${id}-capture`;
-  const frames = packets.map(p => ({ ...p, smac: p.smac || linkMac(p.src), dmac: p.dmac || linkMac(p.dst) }));
+  const frames = packets.map(p => ({ ...p,
+    ...(isRemoteIPv4(p.src) ? { ttl: p.ttl ?? 55 } : {}),
+    smac: p.smac || linkMac(p.src), dmac: p.dmac || linkMac(p.dst) }));
   captures.push({ id: captureId, title: `${title}のキャプチャ`, description, packets: frames });
   lessons.push({ id, chapter, title, level, captureId, intro, mission, hints, explanation, tasks });
 }
@@ -44,6 +46,7 @@ function linkMac(ip) {
   if (String(ip).startsWith('10.0.0.')) return `02:00:00:00:00:${Number(ip.split('.').pop()).toString(16).padStart(2, '0')}`;
   return '02:00:00:00:00:01'; // At the client LAN capture point, remote IPv4 peers use the router MAC.
 }
+function isRemoteIPv4(ip) { return /^(?:192\.0\.2\.|198\.51\.100\.|203\.0\.113\.)/.test(ip || ''); }
 function tcp(src, dst, sport, dport, flags, seq, ack, payload = '') {
   return { type: 'tcp', src, dst, sport, dport, flags, seq, ack, payload,
     smac: linkMac(src), dmac: linkMac(dst) };
@@ -76,6 +79,16 @@ function httpExchange({ src = client, dst = server, sport = 51000, cs = 1000, ss
 }
 function response(status, reason, body, type = 'text/plain') {
   return `HTTP/1.1 ${status} ${reason}\r\nContent-Type: ${type}\r\nContent-Length: ${Buffer.byteLength(body)}\r\nConnection: keep-alive\r\n\r\n${body}`;
+}
+function request(method, path, body = '') {
+  const headers = [
+    `${method} ${path} HTTP/1.1`, 'Host: portal.test', 'User-Agent: pcaproom-easy',
+    'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language: ja,en-US;q=0.8,en;q=0.6', 'Accept-Encoding: gzip, deflate',
+    'Connection: keep-alive',
+    ...(method === 'POST' ? ['Content-Type: application/x-www-form-urlencoded', `Content-Length: ${Buffer.byteLength(body)}`] : [])
+  ];
+  return `${headers.join('\r\n')}\r\n\r\n${body}`;
 }
 function dhcp(message, { xid = 0x12345678, mac = clientMac, ip = '10.20.0.42', serverIp = '10.20.0.1', router = '10.20.0.254', dns = '10.20.0.53' } = {}) {
   const fromServer = message === 2 || message === 5;
@@ -114,10 +127,10 @@ function hello({ src = client, dst = '198.51.100.80', sport = 51443, cs = 2000, 
     tcp(server, client, 9000, sport, 'PA', 9001, 1006, 'OK'),
     tcp(client, server, sport, 9000, 'A', 1006, 9003)];
   add('app-tcp-02', 'app-tcp', 'ACKは次にほしいバイト', 'practice',
-    'TCPのSeqとAckは、バイトの位置を表します。この画面では相対番号を使い、SYNを0、その次を1として表示します。ACK番号は次に受信したいバイトの番号です。',
+    'TCPのSeqとAckは、バイトの位置を表します。この画面では相対番号を使い、SYNを0、その次を1として表示します。詳細のSequence Number (raw)はパケット内の32ビット値で、相対番号とは値が異なります。ACK番号は次に受信したいバイトの番号です。',
     '5バイトの送信と、その受信確認を対応づけてください。',
     ['10.0.0.10 → 10.0.0.80のTCPで、Lenが0より大きい行を探します。', 'No.4にはHELLOの5バイトが入っています。相対Seqは1です。', 'No.5のAcknowledgment Numberを確認します。1から5の5バイトを受け取った後、次にほしい番号は6です。'],
-    'No.4は相対Seq=1から5バイトを送り、No.5はAck=6でそこまでの受信を確認しています。ACKはTCPの受信確認です。アプリが内容を処理し終えた、保存した、という証明ではありません。',
+    'No.4は相対Seq=1から5バイトを送り、No.5はAck=6でそこまでの受信を確認しています。相対番号は各方向の最初の値を基準にしたWiresharkの表示で、送信バイトを書き換えているわけではありません。教材の生番号も大きな32ビット値にしてあります。ACKはTCPの受信確認です。アプリが内容を処理し終えた、保存した、という証明ではありません。',
     packets,
     [textTask('length', '端末がNo.4で送ったTCPペイロードは何バイト？', '5', 4, 'tcp.len', 'TCP Segment Lenが5です。EthernetやIPヘッダーを含むフレーム全体の長さとは異なります。', 'number'),
       textTask('ack', 'その5バイトを確認したNo.5の相対ACK番号は？', '6', 5, 'tcp.ack', 'Seq=1から5バイトなので、次に期待するバイトは6です。', 'number'),
@@ -139,7 +152,7 @@ function hello({ src = client, dst = '198.51.100.80', sport = 51443, cs = 2000, 
     packets,
     [selectTask('close', '前半の接続を終了する4パケットを順に選んでください。', [4, 5, 6, 7], 'FINは1つのシーケンス番号を使います。双方のFINと、それに対するACKを追います。', 'order'),
       selectTask('reset', 'RSTが設定されているパケットを選んでください。', [12], 'No.12のTCP FlagsでResetが設定されています。'),
-      choiceTask('conclusion', 'No.12だけから言えることは？', 'reset-seen', [opt('reset-seen', 'この接続でRSTを観測した'), opt('attack', '必ず攻撃が起きた'), opt('power', 'サーバーの電源が落ちた')], [ev(12, 'tcp.flags.reset')], 'パケットはリセットを示しますが、リセットが起きた背景まではこのフラグだけでは分かりません。')],
+      choiceTask('conclusion', 'No.12だけから言えることは？', 'reset-seen', [opt('reset-seen', 'サーバーから端末へのRST/ACKを観測した'), opt('attack', 'サーバーから端末へのFIN/ACKを観測した'), opt('power', '端末からサーバーへのRST/ACKを観測した')], [ev(12, 'tcp.flags.reset')], 'No.12はサーバーからのRST/ACKです。FINによる終了とは異なりますが、リセットが起きた背景まではこのフラグだけでは分かりません。')],
     '同じ端末間の2つのTCP接続。1つはFINとACKで終了し、もう1つはデータ送信後にRSTを受信。');
 }
 
@@ -151,7 +164,7 @@ function hello({ src = client, dst = '198.51.100.80', sport = 51443, cs = 2000, 
     'DNSのQueryは問い合わせ、Answerは回答です。AレコードはIPv4アドレスを返します。IPヘッダーの送信元・宛先と、DNSの回答に入っているIPを区別しましょう。',
     '問い合わせた名前と、その名前に返されたIPv4アドレスを答えてください。',
     ['dns と入力してNTPを除き、2つのDNSパケットを見ます。', 'No.2のDomain Name System → Queries → Nameを開きます。', 'No.3は応答です。Answers内のAddressに返されたIPがあります。IPヘッダーの10.0.0.53はDNSサーバー自身です。'],
-    'portal.testへのA問い合わせに対し、DNSサーバーは192.0.2.80を回答しています。DNSサーバーのアドレス10.0.0.53と、名前解決されたWebサーバーのアドレスは別です。この回答だけでは、Webサーバーへの接続成功は確認できません。',
+    'portal.testへのA問い合わせに対し、DNSサーバーは192.0.2.80を回答しています。DNSサーバーのアドレス10.0.0.53と、名前解決されたWebサーバーのアドレスは別です。Additional recordsのOPTはEDNS(0)の拡張情報で、扱えるUDPペイロードサイズなどを伝えます。問い合わせにも含まれますが、名前に対するAnswerではありません。この回答だけでは、Webサーバーへの接続成功は確認できません。',
     [n[0], d[0], d[1], n[1]],
     [textTask('name', '問い合わせた名前は？', 'portal.test', 2, 'dns.qry.name', '問い合わせ内容はDNSのQueriesにあります。'),
       textTask('address', 'DNS回答に入っているIPv4アドレスは？', '192.0.2.80', 3, 'dns.a', 'DNS AnswerのAレコードが返されたIPv4です。', 'ip')],
@@ -206,7 +219,7 @@ add('app-dhcp-01', 'app-dhcp', 'DORAで設定を受け取る', 'guided',
     'DHCPはIPアドレスだけでなく、ルーターやDNSサーバーなども配布します。2台の取得が混在しているので、Your IP addressを確認して対象のACKを選びましょう。',
     '10.20.0.42へのACKで配布されたルーターとDNSサーバーを確認してください。',
     ['DHCP Message TypeがACKの行は2つあります。Your IP addressが10.20.0.42の行を探します。', 'No.7が対象のACKです。OptionsのRouterとDomain Name Serverを開きます。', 'Routerは10.20.0.254、Domain Name Serverは10.20.0.53です。No.8は別端末向けの値です。'],
-    '対象のACKはNo.7です。Routerオプションは10.20.0.254、Domain Name Serverオプションは10.20.0.53を示します。DHCPサーバー、ルーター、DNSサーバーは同じ機器とは限りません。今回のDHCPサーバーは10.20.0.1です。',
+    '対象のACKはNo.7です。Routerオプションは10.20.0.254、Domain Name Serverオプションは10.20.0.53を示します。DHCPサーバー、ルーター、DNSサーバーは同じ機器とは限りません。今回のDHCPサーバーは10.20.0.1です。DiscoverにはClient identifier、Host Name、Vendor class、Maximum message sizeもあります。ACKではLease Timeに加え、更新開始のRenewal Timeと再バインド開始のRebinding Timeが並びます。長いOptions一覧では番号と項目名を手がかりに、目的の設定を探します。',
     [a[0], b[0], a[1], b[1], a[2], b[2], a[3], b[3]],
     [textTask('router', '10.20.0.42に配布されたルーターのIPv4アドレスは？', '10.20.0.254', 7, 'dhcp.option.router', '対象ACKのRouterオプションを読みます。DHCPサーバーのIPとは別です。', 'ip'),
       textTask('dns', '同じACKに含まれるDNSサーバーのIPv4アドレスは？', '10.20.0.53', 7, 'dhcp.option.domain_name_server', 'Domain Name Serverオプションは、今後の名前解決に使うDNSサーバーの指定です。', 'ip')],
@@ -246,11 +259,11 @@ add('app-dhcp-01', 'app-dhcp', 'DORAで設定を受け取る', 'guided',
   add('app-ntp-02', 'app-ntp', 'Stratumは精度の保証ではない', 'practice',
     'Stratumは基準時計からの階層を表す値です。通常の同期されたサーバーでは1、2、3…と階層をたどりますが、Stratumの大小だけで時刻の誤差やサーバーの信頼性は判断できません。',
     '2台の応答のStratumを確認し、この数値から言えることを選んでください。',
-    ['応答はNo.2とNo.4です。それぞれのNTP → Peer Clock Stratumを確認します。', '10.0.0.123の応答は2、10.0.0.124の応答は3です。', '数値は時計の階層です。「必ず正確」「必ず安全」といった結論は、この値だけでは出せません。'],
+    ['応答はNo.2とNo.4です。それぞれのNTP → Peer Clock Stratumを確認します。', '10.0.0.123の応答は2、10.0.0.124の応答は3です。', '比較するのは両応答のntp.stratumです。NTPのVersionやModeと取り違えず、申告された階層を読みます。'],
     '応答にはStratum 2と3が示されています。これは申告された時計の階層で、今回のパケットだけで実際の誤差は測れません。同期の良否を調べるときは時刻差、遅延、分散、複数の観測なども必要です。',
     [...ntpPair({ dst: '10.0.0.123', sport: 54201, stratum: 2 }), ...ntpPair({ dst: '10.0.0.124', sport: 54202, stratum: 3 })],
     [textTask('stratum', '10.0.0.123の応答のStratumは？', '2', 2, 'ntp.stratum', '対象サーバーから来た応答のPeer Clock Stratumを読みます。', 'number'),
-      choiceTask('meaning', 'この2つのStratumから言えることは？', 'hierarchy', [opt('hierarchy', '申告された時計の階層が異なる'), opt('exact', 'Stratum 2の時計は必ず誤差ゼロ'), opt('safe', 'Stratum 3のサーバーは必ず安全')], [ev(2, 'ntp.stratum'), ev(4, 'ntp.stratum')], '階層は読めますが、誤差や安全性はこの値だけでは確定しません。', 'all')],
+      choiceTask('meaning', 'この2つの応答のStratumについて言えることは？', 'hierarchy', [opt('hierarchy', '申告された時計の階層は、10.0.0.123が2、10.0.0.124が3'), opt('exact', '申告された時計の階層は、10.0.0.123が3、10.0.0.124が2'), opt('safe', '申告された時計の階層は、両サーバーとも4')], [ev(2, 'ntp.stratum'), ev(4, 'ntp.stratum')], 'Stratumはそれぞれ2と3で、Mode 4とは別の値です。階層は読めますが、実際の誤差や安全性はこの値だけでは確定しません。', 'all')],
     '同じ端末が2台のNTPサーバーに問い合わせ、Stratum 2と3の応答を受信する例。時計精度の比較実験ではない。');
 }
 {
@@ -266,27 +279,27 @@ add('app-dhcp-01', 'app-dhcp', 'DORAで設定を受け取る', 'guided',
     '10.0.0.10から10.0.0.123へのNTP要求を2回観測しましたが、対応する応答はこの記録にありません。フィルター、取得場所、記録時間、経路、損失などが影響する可能性があり、これだけでサーバー停止は断定できません。',
     packets,
     [selectTask('requests', '10.0.0.10から送信されたNTP要求だけを選んでください。', [1, 4], 'No.1とNo.4は対象端末のMode 3です。別端末のNo.5・6は含めません。'),
-      choiceTask('report', 'キャプチャ全体を確認した後の報告として適切なのは？', 'not-observed', [opt('not-observed', 'この記録には、対象要求に対応する応答が見当たらない'), opt('down', '時刻サーバーの停止が証明された'), opt('success', '別端末の応答があるので対象要求も成功した')], [ev(1, 'ntp.flags.mode'), ev(4, 'ntp.flags.mode')], '選んだ2パケットは要求の存在を示します。応答が記録されていない原因の特定には、追加の観測が必要です。', 'all')],
+      choiceTask('report', 'キャプチャ全体を確認した後の報告として適切なのは？', 'not-observed', [opt('not-observed', '対象端末の要求は2回あり、対応する応答はこの記録に見当たらない'), opt('down', '対象端末の要求は1回あり、5秒後に再送ではなくサーバー応答がある'), opt('success', '対象端末の要求は2回あり、No.6がその要求へのサーバー応答である')], [ev(1, 'ntp.flags.mode'), ev(4, 'ntp.flags.mode')], '選んだ2パケットはいずれも対象端末の要求です。No.6は10.0.0.20への別の応答です。対象の応答が記録されていない原因の特定には、追加の観測が必要です。', 'all')],
     '対象端末の2回のNTP要求には応答が収録されていない。別端末のNTP交換とDNS交換も含む有限の観測窓。');
 }
 
 // HTTP ----------------------------------------------------------------------
 {
-  const request = 'GET /index.html HTTP/1.1\r\nHost: portal.test\r\nUser-Agent: pcaproom-easy\r\n\r\n';
+  const requestText = request('GET', '/index.html');
   add('app-http-01', 'app-http', 'GETと200 OKを対応づける', 'guided',
-    '平文HTTPでは、要求のMethod・Host・URIと応答のStatus Codeを読めます。TCP接続ができたかだけでなく、アプリがどんな結果を返したかまで確認します。',
+    '平文HTTPでは、要求のMethod・Host・URIと応答のStatus Codeを読めます。AcceptやAccept-Languageなど複数のヘッダーがあっても、まず要求行とHostを探します。TCP接続ができたかだけでなく、アプリがどんな結果を返したかまで確認します。',
     '要求されたパスと、その要求へのHTTPステータスコードを答えてください。',
     ['http で絞ると要求と応答が残ります。No.4はGET、No.6はHTTP/1.1 200 OKです。', '要求のRequest URIにはパスがあり、Hostには接続先の名前があります。', 'No.4のURIは/index.html、No.6のStatus Codeは200です。TCPのACK番号とは別の情報です。'],
     '端末はportal.testの/index.htmlをGETし、サーバーは200 OKと本文を返しています。200はこのHTTP要求の成功を示しますが、ページ内の画像を含むすべての取得や、画面表示の完了まで証明するものではありません。',
-    httpExchange({ sport: 51101, request, response: response(200, 'OK', '<h1>Hello</h1>\n', 'text/html') }),
+    httpExchange({ sport: 51101, request: requestText, response: response(200, 'OK', '<h1>Hello</h1>\n', 'text/html') }),
     [textTask('path', 'GETで要求されたパスは？', '/index.html', 4, 'http.request.uri', 'Request URIを読みます。Host名と合わせると要求先を整理できます。', 'exact'),
       textTask('status', 'この要求に対するHTTPステータスコードは？', '200', 6, 'http.response.code', 'HTTPのStatus Codeが200です。', 'number')],
     '1つのHTTP/1.1 GETと、Content-Lengthに一致する完全な200 OK応答。TCPハンドシェイクを含む。');
 }
 {
-  const get = 'GET /old.txt HTTP/1.1\r\nHost: portal.test\r\n\r\n';
+  const get = request('GET', '/old.txt');
   const body = 'message=hello';
-  const post = `POST /api/notes HTTP/1.1\r\nHost: portal.test\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: ${Buffer.byteLength(body)}\r\n\r\n${body}`;
+  const post = request('POST', '/api/notes', body);
   const packets = [...httpExchange({ sport: 51102, request: get, response: response(404, 'Not Found', 'No such file\n') }),
     ...httpExchange({ sport: 51103, cs: 4000, ss: 18000, request: post, response: response(201, 'Created', '{"id":7}\n', 'application/json') })];
   add('app-http-02', 'app-http', 'POSTと404を混同しない', 'practice',
@@ -297,18 +310,18 @@ add('app-dhcp-01', 'app-dhcp', 'DORAで設定を受け取る', 'guided',
     packets,
     [textTask('method', '/api/notesへの要求Methodは？', 'POST', 11, 'http.request.method', '対象のURIと同じ要求にあるRequest Methodを確認します。', 'exact'),
       textTask('get-status', '/old.txtの取得に対するHTTPステータスコードは？', '404', 6, 'http.response.code', '同じTCP接続のGETと応答を組にします。別接続の201と取り違えないようにします。', 'number'),
-      choiceTask('404-meaning', 'No.6から分かることは？', 'http-response', [opt('http-response', 'サーバーから404のHTTP応答を受け取った'), opt('tcp-failed', 'TCP接続が一度も成立しなかった'), opt('attack', '攻撃が起きたと確定した')], [ev(6, 'http.response.code')], '404というアプリの結果を観測しています。通信できないことと、要求したものが見つからないことは別です。')],
+      choiceTask('404-meaning', 'No.6から分かることは？', 'http-response', [opt('http-response', 'GET /old.txtへの404のHTTP応答を受け取った'), opt('tcp-failed', 'GET /old.txtへの200のHTTP応答を受け取った'), opt('attack', 'POST /api/notesへの404のHTTP応答を受け取った')], [ev(6, 'http.response.code')], 'No.6はGET /old.txtに対する404です。別接続のPOSTと201には対応しません。通信できないことと、要求したものが見つからないことは別です。')],
     '2つのHTTP/1.1接続。GETへの404と、本文を持つPOSTへの201。全メッセージはContent-Lengthを持つ完全な平文HTTP。');
 }
 {
   const sport = 51104, cs = 6000, ss = 20000;
-  const request = 'GET /report.txt HTTP/1.1\r\nHost: portal.test\r\n\r\n';
+  const requestText = request('GET', '/report.txt');
   const complete = response(200, 'OK', 'packet-reading\n');
   const split = complete.indexOf('\r\n\r\n') + 6;
   const part1 = complete.slice(0, split), part2 = complete.slice(split);
-  const qend = cs + 1 + Buffer.byteLength(request);
+  const qend = cs + 1 + Buffer.byteLength(requestText);
   const packets = [...handshake(client, server, sport, 80, cs, ss),
-    tcp(client, server, sport, 80, 'PA', cs + 1, ss + 1, request), tcp(server, client, 80, sport, 'A', ss + 1, qend),
+    tcp(client, server, sport, 80, 'PA', cs + 1, ss + 1, requestText), tcp(server, client, 80, sport, 'A', ss + 1, qend),
     tcp(server, client, 80, sport, 'PA', ss + 1, qend, part1),
     { type: 'udp', src: '10.0.0.30', dst: '10.0.0.31', sport: 56000, dport: 56001, payload: 'status' },
     tcp(server, client, 80, sport, 'PA', ss + 1 + Buffer.byteLength(part1), qend, part2),
@@ -327,7 +340,7 @@ add('app-dhcp-01', 'app-dhcp', 'DORAで設定を受け取る', 'guided',
 // TLS -----------------------------------------------------------------------
 {
   add('app-tls-01', 'app-tls', 'ClientHelloの名前を読む', 'guided',
-    'TLSのClientHelloには、SNIとして接続先の名前が含まれる場合があります。この教材では暗号化されていないClientHelloを収録しています。IPヘッダーの宛先とSNIの名前は別々に確認します。',
+    'TLSのClientHelloには、SNIとして接続先の名前が含まれる場合があります。この教材では暗号化されていない短いTLS 1.2 ClientHelloを収録しています。実際のブラウザではTLS 1.3の提案や多数の暗号スイート・拡張を含み、この例より数倍長いこともあります。まずserver_nameの位置を探し、IPヘッダーの宛先とSNIの名前を別々に確認します。',
     'このClientHelloで送られたSNIと、パケットの宛先IPを答えてください。',
     ['No.4のTLS → Handshake Protocol: Client Helloを開きます。', 'Extension: server_nameの中のServer NameがSNIです。', 'SNIはsecure.testです。宛先IPは同じNo.4のIPv4 Destination Addressにある198.51.100.80です。'],
     '今回のClientHelloではSNI=secure.testを観測できます。これは要求されたサーバー名の情報で、URLのパスやHTTP本文ではありません。SNIが省略された通信や、ClientHelloの一部を暗号化する仕組みもあり、名前が必ず平文で見えるとは限りません。',
@@ -349,7 +362,7 @@ add('app-dhcp-01', 'app-dhcp', 'DORAで設定を受け取る', 'guided',
     'No.2の送信元IPは198.51.100.81で、TLSレコードのContent TypeはApplication Dataです。これだけではHTTPのMethod、パス、本文を読むことはできません。教材の不透明データは実セッションの暗号文を復号できる形で再現したものではなく、成功したTLS接続を証明するものでもありません。',
     packets,
     [textTask('sender', 'Application Dataレコードの送信元IPv4アドレスは？', '198.51.100.81', 2, 'ip.src', '暗号化された通信でも、ここで収録したIPヘッダーの送信元は読めます。', 'ip'),
-      choiceTask('path-limit', '復号情報のないこの記録から、HTTPのURLパスを特定できる？', 'cannot-read', [opt('cannot-read', 'この記録だけでは特定できない'), opt('root-path', '必ず/であると分かる'), opt('all-readable', 'TCPの443番ポートを開けば全文が読める')], [ev(2, 'tls.record.content_type')], 'TLS Application Dataがあることと、暗号化されたアプリの内容が読めることは別です。')],
+      choiceTask('path-limit', '復号情報のないこの記録から、HTTPのURLパスを特定できる？', 'cannot-read', [opt('cannot-read', 'Application Dataはあるが、HTTPのパスはこの記録から読めない'), opt('root-path', 'Application Dataの中にHTTPのRequest URIとして/が表示されている'), opt('all-readable', 'No.2はApplication Dataではなく、GET /index.htmlのHTTP要求である')], [ev(2, 'tls.record.content_type')], 'No.2はTLS Application Dataで、HTTPの要求行は解析されていません。TLSレコードがあることと、その内容が読めることは別です。')],
     '途中からの取得を模したTLS Application Dataレコード。ペイロードは教材用の不透明バイトであり、実セッションの鍵や復号可能な暗号文は含まない。');
 }
 {
@@ -363,8 +376,16 @@ add('app-dhcp-01', 'app-dhcp', 'DORAで設定を受け取る', 'guided',
     [...withName, ...withoutName],
     [selectTask('visible-name', 'SNIのServer Nameフィールドが実際にあるパケットを選んでください。', [4], 'No.4にはserver_name拡張があります。No.9のClientHelloにはありません。'),
       textTask('nameless-ip', 'SNIのないClientHelloの宛先IPv4アドレスは？', '198.51.100.83', 9, 'ip.dst', '名前が見えなくても、No.9のIPv4ヘッダーは確認できます。', 'ip'),
-      choiceTask('interpret', 'No.9について適切な説明は？', 'limited', [opt('limited', 'このClientHelloにはSNIがなく、宛先IPは確認できる'), opt('same-name', '必ずknown.testへの接続である'), opt('invalid', 'SNIがないため必ず不正な通信である')], [ev(9, 'tls.handshake.type')], 'ClientHelloを開いて拡張一覧を確認します。SNIは必ず存在するフィールドではありません。')],
+      choiceTask('interpret', 'No.9について適切な説明は？', 'limited', [opt('limited', 'このClientHelloにはSNIがなく、宛先IPは198.51.100.83である'), opt('same-name', 'このClientHelloにはknown.testのSNIがあり、宛先IPは198.51.100.83である'), opt('invalid', 'このClientHelloにはSNIがなく、宛先IPは198.51.100.82である')], [ev(9, 'tls.handshake.type')], 'No.9のClientHelloを開いて拡張一覧と宛先IPを確認します。known.testと198.51.100.82は別接続のNo.4の情報です。')],
     'SNIありとSNIなしの2つの有効な教材用ClientHello。ECHの暗号化自体を実装するものではない。');
+}
+
+// Vary the displayed answer position deterministically; saved answers use value.
+let choiceIndex = 0;
+for (const lesson of lessons) for (const task of lesson.tasks) {
+  if (task.kind !== 'choice') continue;
+  const shift = choiceIndex++ % task.options.length;
+  task.options = [...task.options.slice(shift), ...task.options.slice(0, shift)];
 }
 
 module.exports = { chapters, captures, lessons };

@@ -1,6 +1,6 @@
 'use strict';
 const chapters=[{id:'grad',title:'卒業調査',subtitle:'プロトコルをつないで、分かったことを説明する。'}];
-const request='GET /guide HTTP/1.1\r\nHost: portal.test\r\nConnection: close\r\n\r\n';
+const request='GET /guide HTTP/1.1\r\nHost: portal.test\r\nUser-Agent: pcaproom-easy\r\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\nAccept-Language: ja,en-US;q=0.8,en;q=0.6\r\nAccept-Encoding: gzip, deflate\r\nConnection: close\r\n\r\n';
 const response='HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 7\r\nConnection: close\r\n\r\nWelcome';
 const captures=[
  {id:'grad-connect',title:'新しい端末がネットワークにつながる',description:'端末が参加するLANのミラーポートで記録した架空の教材です。DHCPv4による初回設定から名前解決までを含みます。',packets:[
@@ -43,17 +43,20 @@ const lessons=[
   {id:'resolved',kind:'text',normalize:'ip',prompt:'docs.testのAレコードとして返ったIPは？',answer:'192.0.2.80',evidence:[{frame:8,field:'dns.a'}],why:'DNS応答のAnswerに記録されたIPv4アドレスです。'}
  ]},
  {id:'grad-2',chapter:'grad',title:'どこまで成功している？',level:'challenge',captureId:'grad-failure',intro:'「pingには応答があるのに、service.test:8080へ接続できない」という相談です。通信の各段階を分けて観察し、記録以上の原因を決めつけない報告を作ります。',mission:'疎通・名前解決・TCP接続の結果を順に確認しましょう。',hints:['ICMP Echo Reply、DNS Answer、SYNに対するTCP応答を確認します。','No. 6ではSYN/ACKではなくRSTが返っています。','ICMPはNo. 2、DNSはNo. 4、TCP RSTはNo. 6が根拠です。サービス停止かFWかの断定はできません。'],explanation:'Echo ReplyとDNSのAレコード応答が観測されていますが、TCP/8080へのSYNに対してRST/ACKが返り、この試行は接続成立に至っていません。待受サービスがない、途中の機器が拒否した等の内部理由は、このPCAPだけでは確定できません。',tasks:[
-  {id:'ping',kind:'choice',prompt:'pingについて確認できることは？',options:[{value:'reply',label:'Echo Replyを受信している'},{value:'all',label:'すべてのアプリが正常に動いている'},{value:'none',label:'応答は記録されていない'}],answer:'reply',evidence:[{frame:2,field:'icmp.type'}],why:'Echo Replyは疎通の証拠ですが、アプリの正常動作までは示しません。'},
+  {id:'ping',kind:'choice',prompt:'pingについて確認できることは？',options:[{value:'reply',label:'192.0.2.80からEcho Replyを受信している'},{value:'all',label:'192.0.2.80からDestination Unreachableを受信している'},{value:'none',label:'Echo Requestはあるが、対応するReplyは記録されていない'}],answer:'reply',evidence:[{frame:2,field:'icmp.type'}],why:'No.2はEcho Replyです。疎通の証拠ですが、アプリの正常動作までは示しません。'},
   {id:'name',kind:'text',normalize:'ip',prompt:'service.testのAレコードは？',answer:'192.0.2.80',evidence:[{frame:4,field:'dns.a'}],why:'名前解決の応答には192.0.2.80が返っています。'},
-  {id:'connection',kind:'choice',prompt:'TCP接続について報告できることは？',options:[{value:'reset',label:'RST/ACKが返り、この接続試行は成立していない。内部原因は未確認。'},{value:'ok',label:'ping成功なのでTCPも成立した。'},{value:'stopped',label:'サーバーの全サービスが停止していると断定できる。'}],answer:'reset',evidence:[{frame:6,field:'tcp.flags.reset'}],why:'RSTが観測されたことと、その内部原因は分けて報告します。'}
+  {id:'connection',kind:'choice',prompt:'TCP接続について報告できることは？',options:[{value:'reset',label:'SYNに対してRST/ACKが返り、この接続試行は成立していない。'},{value:'ok',label:'SYNに対してSYN/ACKが返り、最後のACKまで記録されている。'},{value:'stopped',label:'SYNに対してFIN/ACKが返り、通常の切断手順を開始している。'}],answer:'reset',evidence:[{frame:6,field:'tcp.flags.reset'}],why:'No.6はRST/ACKです。SYN/ACKやFIN/ACKとは異なります。RSTが観測されたことと、その内部原因は分けて報告します。'}
  ]},
  {id:'grad-3',chapter:'grad',title:'通信を根拠付きで説明する',level:'challenge',captureId:'grad-web',intro:'同じ端末の平文HTTPとTLS接続開始が収録されています。HTTPの結果を読み、TLSでは観測できる範囲に絞って説明しましょう。必要に応じてTCPストリームを追跡できます。',mission:'要求されたパス、HTTPの応答コード、別接続のTLSで判断できる範囲を答えましょう。',hints:['httpで絞ると要求と応答を探しやすくなります。TLSを見るときはフィルターを解除します。','HTTPはNo. 6とNo. 7、TLS ClientHelloはNo. 12です。','/guide、200がHTTPの結果です。TLS ClientHelloのSNIはsecure.testですが、URLパスや表示完了は分かりません。'],explanation:'portal.testにGET /guideが送られ、200 OKとWelcomeという本文が返っています。別接続ではsecure.testをSNIに含むTLS ClientHelloを観測できますが、それ以降は収録されていないため、TLS成立・URLパス・ページ表示の成否は確認できません。',tasks:[
   {id:'path',kind:'text',normalize:'exact',prompt:'HTTPで要求したパスは？',answer:'/guide',evidence:[{frame:6,field:'http.request.uri'}],why:'HTTP Request URIで確認できます。'},
   {id:'status',kind:'text',normalize:'number',prompt:'HTTP応答コードは？',answer:'200',evidence:[{frame:7,field:'http.response.code'}],why:'このHTTP要求には200 OKが返っています。'},
-  {id:'limit',kind:'choice',prompt:'TLS接続について、記録から言えることは？',options:[{value:'sni',label:'ClientHelloのSNIはsecure.test。URLのパスや接続完了は確認できない。'},{value:'same',label:'HTTPSでも/guideを取得したと分かる。'},{value:'complete',label:'ClientHelloがあるのでページ表示まで成功した。'}],answer:'sni',evidence:[{frame:12,field:'tls.handshake.extensions_server_name'}],why:'観測できたSNIと、未収録・暗号化された情報を区別できています。'}
+  {id:'limit',kind:'choice',prompt:'TLS接続について、記録から言えることは？',options:[{value:'sni',label:'ClientHelloのSNIはsecure.test。その後のTLS通信は記録されていない。'},{value:'same',label:'ClientHelloのSNIはportal.test。その後のTLS通信は記録されていない。'},{value:'complete',label:'ClientHelloのSNIはsecure.test。その後にServerHelloも記録されている。'}],answer:'sni',evidence:[{frame:12,field:'tls.handshake.extensions_server_name'}],why:'No.12で観測できるSNIはsecure.testです。portal.testは別の平文HTTPのHostで、ClientHello後のTLS通信はこの記録にはありません。URLのパスや接続完了も判断できません。'}
  ]}
 ];
 // On the client LAN, off-link traffic goes through the gateway MAC.
 const linkMac=ip=>ip?.startsWith('10.0.0.')?'02:00:00:00:00:'+ip.split('.').at(-1).padStart(2,'0'):'02:00:00:00:00:01';
-for(const capture of captures)for(const p of capture.packets)if(!['dhcp','arp'].includes(p.type)){p.smac=p.smac||linkMac(p.src);p.dmac=p.dmac||linkMac(p.dst);}
+for(const capture of captures)for(const p of capture.packets)if(!['dhcp','arp'].includes(p.type)){p.smac=p.smac||linkMac(p.src);p.dmac=p.dmac||linkMac(p.dst);if(/^(?:192\.0\.2\.|198\.51\.100\.|203\.0\.113\.)/.test(p.src||''))p.ttl=p.ttl??55;}
+// Vary the displayed answer position deterministically; saved answers use value.
+let choiceIndex=0;
+for(const lesson of lessons)for(const task of lesson.tasks){if(task.kind!=='choice')continue;const shift=choiceIndex++%task.options.length;task.options=[...task.options.slice(shift),...task.options.slice(0,shift)];}
 module.exports={chapters,captures,lessons};

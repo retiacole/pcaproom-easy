@@ -38,7 +38,7 @@ const captures = [
       { type: 'arp', op: 1, psrc: '10.10.3.20', pdst: '10.10.3.1', hwsrc: '02:10:00:00:03:20' },
       { type: 'arp', op: 2, psrc: '10.10.3.1', pdst: '10.10.3.20', hwsrc: '02:10:00:00:03:01', hwdst: '02:10:00:00:03:20' },
       { type: 'tcp', src: '10.10.3.20', dst: '192.0.2.80', smac: '02:10:00:00:03:20', dmac: '02:10:00:00:03:01', sport: 51320, dport: 80, flags: 'S', seq: 1000, ack: 0 },
-      { type: 'tcp', src: '192.0.2.80', dst: '10.10.3.20', smac: '02:10:00:00:03:01', dmac: '02:10:00:00:03:20', sport: 80, dport: 51320, flags: 'SA', seq: 8000, ack: 1001 },
+      { type: 'tcp', src: '192.0.2.80', dst: '10.10.3.20', smac: '02:10:00:00:03:01', dmac: '02:10:00:00:03:20', sport: 80, dport: 51320, flags: 'SA', seq: 8000, ack: 1001, ttl: 55 },
       { type: 'tcp', src: '10.10.3.20', dst: '192.0.2.80', smac: '02:10:00:00:03:20', dmac: '02:10:00:00:03:01', sport: 51320, dport: 80, flags: 'A', seq: 1001, ack: 8001 }
     ]
   },
@@ -109,11 +109,11 @@ const captures = [
     id: 'base-icmp-echo', title: 'pingの要求と応答',
     description: '端末10.40.1.10から10.40.1.1へ、Sequence Numberが7と8のEcho Requestを送った記録です。',
     packets: [
-      { type: 'icmp', src: '10.40.1.10', dst: '10.40.1.1', icmpType: 8, icmpId: 401, icmpSeq: 7, payload: 'ping-7', time: 0 },
+      { type: 'icmp', src: '10.40.1.10', dst: '10.40.1.1', icmpType: 8, icmpId: 401, icmpSeq: 7, time: 0 },
       { type: 'udp', src: '10.40.1.11', dst: '10.40.1.50', sport: 54011, dport: 7040, payload: 'background', time: 0.002 },
-      { type: 'icmp', src: '10.40.1.1', dst: '10.40.1.10', icmpType: 0, icmpId: 401, icmpSeq: 7, payload: 'ping-7', time: 0.004 },
-      { type: 'icmp', src: '10.40.1.10', dst: '10.40.1.1', icmpType: 8, icmpId: 401, icmpSeq: 8, payload: 'ping-8', time: 1 },
-      { type: 'icmp', src: '10.40.1.1', dst: '10.40.1.10', icmpType: 0, icmpId: 401, icmpSeq: 8, payload: 'ping-8', time: 1.004 }
+      { type: 'icmp', src: '10.40.1.1', dst: '10.40.1.10', icmpType: 0, icmpId: 401, icmpSeq: 7, time: 0.004 },
+      { type: 'icmp', src: '10.40.1.10', dst: '10.40.1.1', icmpType: 8, icmpId: 401, icmpSeq: 8, time: 1 },
+      { type: 'icmp', src: '10.40.1.1', dst: '10.40.1.10', icmpType: 0, icmpId: 401, icmpSeq: 8, time: 1.004 }
     ]
   },
   {
@@ -152,7 +152,7 @@ const captures = [
       { type: 'icmp6', ipv6: true, src: 'fe80::20', dst: 'ff02::1:ff00:99', smac: '02:50:00:00:02:20', dmac: '33:33:ff:00:00:99', icmpType: 135, target: 'fe80::99', hopLimit: 255 },
       { type: 'icmp6', ipv6: true, src: 'fe80::20', dst: 'ff02::1:ff00:1', smac: '02:50:00:00:02:20', dmac: '33:33:ff:00:00:01', icmpType: 135, target: 'fe80::1', hopLimit: 255 },
       { type: 'icmp6', ipv6: true, src: 'fe80::99', dst: 'fe80::20', smac: '02:50:00:00:02:99', dmac: '02:50:00:00:02:20', icmpType: 136, target: 'fe80::99', hopLimit: 255 },
-      { type: 'icmp6', ipv6: true, src: 'fe80::1', dst: 'fe80::20', smac: '02:50:00:00:02:01', dmac: '02:50:00:00:02:20', icmpType: 136, target: 'fe80::1', hopLimit: 255 },
+      { type: 'icmp6', ipv6: true, src: 'fe80::1', dst: 'fe80::20', smac: '02:50:00:00:02:01', dmac: '02:50:00:00:02:20', icmpType: 136, target: 'fe80::1', router: true, hopLimit: 255 },
       { type: 'icmp6', ipv6: true, src: 'fe80::20', dst: 'fe80::1', smac: '02:50:00:00:02:20', dmac: '02:50:00:00:02:01', icmpType: 128, icmpId: 502, icmpSeq: 1 }
     ]
   },
@@ -163,7 +163,8 @@ const captures = [
       { type: 'icmp6', ipv6: true, src: 'fe80::22', dst: 'fe80::1', smac: '02:50:00:00:03:22', dmac: '02:50:00:00:03:01', icmpType: 128, icmpId: 503, icmpSeq: 1 },
       { type: 'icmp6', ipv6: true, src: 'fe80::1', dst: 'ff02::1', smac: '02:50:00:00:03:01', dmac: '33:33:00:00:00:01', icmpType: 134, routerLifetime: 1800, prefix: '2001:db8:53::', hopLimit: 255 },
       { type: 'icmp6', ipv6: true, src: 'fe80::1', dst: 'fe80::22', smac: '02:50:00:00:03:01', dmac: '02:50:00:00:03:22', icmpType: 129, icmpId: 503, icmpSeq: 1 },
-      { type: 'icmp6', ipv6: true, src: 'fe80::23', dst: 'ff02::1:ff00:1', smac: '02:50:00:00:03:23', dmac: '33:33:ff:00:00:01', icmpType: 135, target: 'fe80::1', hopLimit: 255 }
+      { type: 'icmp6', ipv6: true, src: 'fe80::23', dst: 'ff02::1:ff00:1', smac: '02:50:00:00:03:23', dmac: '33:33:ff:00:00:01', icmpType: 135, target: 'fe80::1', hopLimit: 255 },
+      { type: 'icmp6', ipv6: true, src: 'fe80::1', dst: 'fe80::23', smac: '02:50:00:00:03:01', dmac: '02:50:00:00:03:23', icmpType: 136, target: 'fe80::1', router: true, hopLimit: 255 }
     ]
   },
   {
@@ -208,7 +209,7 @@ const lessons = [
     tasks: [
       { id: 'base-ethernet-1-src', prompt: 'パケット1の送信元MACアドレスは？', kind: 'text', answer: '02:10:00:00:00:20', normalize: 'mac', evidence: [{ frame: 1, field: 'eth.src' }], why: 'Ethernetの送信元はeth.srcです。IPアドレスやUDPのポート番号とは別の項目です。' }
     ],
-    explanation: 'パケット1のEthernet送信元は02:10:00:00:00:20です。パケット2では送信元と宛先が逆になります。通信はEthernet、IP、UDPのように複数の層で構成され、各層に届け先の情報があります。'
+    explanation: 'パケット1のEthernet送信元は02:10:00:00:00:20です。パケット2では送信元と宛先が逆になります。通信はEthernet、IP、UDPのように複数の層で構成され、各層に届け先の情報があります。教材では02で始まるローカル管理の架空MACを使っています。実物のWiresharkではMAC名解決を有効にすると、登録済みのプレフィックスにベンダー名が付く場合があります。表示名が違っても、元のMACアドレスを詳細から確認できます。'
   },
   {
     id: 'base-ethernet-2', chapter: 'base-ethernet', title: 'ブロードキャストを探す', level: 'practice', captureId: 'base-eth-broadcast',
@@ -300,7 +301,7 @@ const lessons = [
     tasks: [
       { id: 'base-icmp-1-pair', prompt: 'Sequence Number 7のEcho Request → Echo Replyの順に選択してください。', kind: 'order', answer: [1, 3], why: 'Identifier、Sequence Number、アドレスの向きが対応しています。直後のUDPパケット2はpingの返事ではありません。' }
     ],
-    explanation: 'パケット1と3が対応するEcho交換です。この時点ではICMPの往復を観測できたと言えますが、Webなど別サービスの利用可否までは分かりません。逆にEcho Replyが見えない場合も、制限・欠落・採取位置などの可能性があり、端末停止とは断定できません。'
+    explanation: 'パケット1と3が対応するEcho交換です。この時点ではICMPの往復を観測できたと言えますが、Webなど別サービスの利用可否までは分かりません。逆にEcho Replyが見えない場合も、制限・欠落・採取位置などの可能性があり、端末停止とは断定できません。今回のデータ部分はWindowsのpingでよく見られる32バイトの英字パターンを模しています。ペイロードは実装の手がかりになりますが、変更や模倣ができるため、これだけで送信元OSは決まりません。'
   },
   {
     id: 'base-icmp-2', chapter: 'base-icmp', title: 'Destination Unreachableを読む', level: 'practice', captureId: 'base-icmp-unreachable',
@@ -328,7 +329,7 @@ const lessons = [
         { value: 'port-unreachable', label: '宛先UDPポートに到達できない' },
         { value: 'transit-expired', label: '転送中にTTLが尽きた' },
         { value: 'echo-reply', label: 'Echo Requestに正常応答した' },
-        { value: 'host-off', label: '宛先端末の電源が切れていると確定した' }
+        { value: 'host-off', label: 'IPフラグメントの再構成時間が超過した' }
       ], evidence: [{ frame: 2, field: 'icmp.type' }, { frame: 2, field: 'icmp.code' }], evidenceMode: 'all', why: 'Type 11 / Code 0は転送中のTTL超過です。宛先のアプリや端末の状態についての通知ではありません。' }
     ],
     explanation: 'TTL 1の送信に対し、最初のルーターがType 11 / Code 0を返しています。この記録が示すのは、パケットが途中でTTL上限に達したことです。最終宛先203.0.113.90の稼働状態までは判断できません。'
@@ -352,7 +353,7 @@ const lessons = [
       { id: 'base-icmp6-2-target', prompt: 'パケット2のNSが調べているTarget Addressは？', kind: 'text', answer: 'fe80::1', normalize: 'ip', evidence: [{ frame: 2, field: 'icmpv6.nd.ns.target_address' }], why: 'NSのTarget Addressが調査対象です。IPv6宛先ff02::1:ff00:1は、その問い合わせを届けるマルチキャストアドレスです。' },
       { id: 'base-icmp6-2-pair', prompt: 'fe80::1を探すNS → 対応するNAの順に選んでください。', kind: 'order', answer: [2, 4], why: 'Type 135と136、Target Address、送信先の対応を確認します。1と3はfe80::99についての交換です。' }
     ],
-    explanation: 'パケット2と4がfe80::1についてのNS/NAです。この例のNSはSolicited-node multicast宛てに送られ、NAは問い合わせ元へユニキャストで返ります。NDPは近隣のリンク層アドレス解決や到達性確認などを担い、IPv6の基本動作を支えます。'
+    explanation: 'パケット2と4がfe80::1についてのNS/NAです。この例のNSはSolicited-node multicast宛てに送られ、NAは問い合わせ元へユニキャストで返ります。No.4のNAではRouter・Solicited・Overrideのフラグが立ち、送信元がルーターであることも通知しています。NDPは近隣のリンク層アドレス解決や到達性確認などを担い、IPv6の基本動作を支えます。'
   },
   {
     id: 'base-icmp6-3', chapter: 'base-icmp6', title: 'RAが知らせるルーター情報', level: 'challenge', captureId: 'base-ndp-router',
@@ -363,7 +364,7 @@ const lessons = [
       { id: 'base-icmp6-3-ra', prompt: 'Router Advertisementのパケットを選んでください。', kind: 'packets', answer: [2], why: 'ICMPv6 Type 134がRAです。EchoやNSもICMPv6なので、Protocol名だけでは区別できません。' },
       { id: 'base-icmp6-3-lifetime', prompt: 'このRAが通知するRouter Lifetimeは何秒ですか？', kind: 'text', answer: '1800', normalize: 'number', evidence: [{ frame: 2, field: 'icmpv6.nd.ra.router_lifetime' }], why: 'Router Lifetimeはデフォルトルーターの有効期間です。アドレスのリース時間、Prefixの有効期間、Hop Limitとは区別します。' }
     ],
-    explanation: 'パケット2のRAはRouter Lifetime 1800秒を通知しています。この例の宛先ff02::1はリンク内の全ノードです。RAはプレフィックスなども通知でき、端末は条件が合えばSLAACでアドレスを構成できます。DHCPv6も設定配布に使われますが、IPv6のデフォルトルーター発見はRAの役割です。このRA一枚だけでは、各端末が実際に採用した設定までは分かりません。'
+    explanation: 'パケット2のRAはRouter Lifetime 1800秒を通知しています。この例の宛先ff02::1はリンク内の全ノードです。No.5では同じfe80::1が近隣探索にNAで答え、Routerフラグも立てています。RAはプレフィックスなども通知でき、端末は条件が合えばSLAACでアドレスを構成できます。DHCPv6も設定配布に使われますが、IPv6のデフォルトルーター発見はRAの役割です。このRA一枚だけでは、各端末が実際に採用した設定までは分かりません。'
   },
   {
     id: 'base-udp-1', chapter: 'base-udp', title: 'UDPポートで向きを読む', level: 'guided', captureId: 'base-udp-ports',
@@ -384,7 +385,7 @@ const lessons = [
     tasks: [
       { id: 'base-udp-2-size', prompt: 'パケット1のUDPデータ部分は何バイトですか？（UDP Lengthを根拠に選択）', kind: 'text', answer: '4', normalize: 'number', evidence: [{ frame: 1, field: 'udp.length' }], why: 'udp.lengthの12バイトからUDPヘッダーの8バイトを引きます。フレーム全体のLengthから引くと、IPやEthernetも混ざってしまいます。' }
     ],
-    explanation: 'UDP Length 12 − UDPヘッダー8 = データ4バイトです。教材のASCII文字列PINGは4バイトに対応します。Ethernetの最低長を満たすためのパディングが存在しても、UDPのデータ長には含まれません。'
+    explanation: 'UDP Length 12 − UDPヘッダー8 = データ4バイトです。教材のASCII文字列PINGは4バイトに対応します。このフレームはEthernet 14 + IPv4 20 + UDP 12 = 46バイトで、14バイトのパディングを加えて60バイトです。通常PCAPに記録されないFCSの4バイトも含めると、線上のEthernet最小長64バイトになります。パディングはUDPのデータ長には含まれません。送信側のキャプチャではNICがパディングを付ける前の短いフレームが見える場合もあります。'
   },
   {
     id: 'base-udp-3', chapter: 'base-udp', title: '応答や再試行は誰の仕事？', level: 'challenge', captureId: 'base-udp-retry',
@@ -395,9 +396,9 @@ const lessons = [
       { id: 'base-udp-3-requests', prompt: '10.60.3.35:56035 → 10.60.3.75:62075のUDPパケットをすべて選んでください。', kind: 'packets', answer: [1, 3], why: 'IPとポートの向きを両方合わせて確認します。パケット4は同じ会話でも逆方向なので、要求側の集合には含めません。' },
       { id: 'base-udp-3-observation', prompt: 'この記録から確認できることは？（対象の3パケットのFrame Numberを根拠に選択）', kind: 'choice', answer: 'observed-count', options: [
         { value: 'observed-count', label: '要求側のUDPを2個、応答側のUDPを1個観測した' },
-        { value: 'udp-auto-retry', label: 'UDPヘッダーの機能が必ず自動再送した' },
-        { value: 'server-down', label: 'サーバーの電源が切れていたと確定した' },
-        { value: 'tcp-before', label: '先にTCP接続を成立させる必要がある' }
+        { value: 'udp-auto-retry', label: '要求側のUDPを1個、応答側のUDPを2個観測した' },
+        { value: 'server-down', label: '要求側のUDPを2個、対応するICMPエラーを1個観測した' },
+        { value: 'tcp-before', label: '要求側のUDPを2個、応答側のUDPを2個観測した' }
       ], evidence: [{ frame: 1, field: 'frame.number' }, { frame: 3, field: 'frame.number' }, { frame: 4, field: 'frame.number' }], evidenceMode: 'all', why: '観測したパケット数と、その背後の原因を区別します。UDPに自動再送機能はなく、この教材の再試行はアプリが実装したものです。' }
     ],
     explanation: '要求側はパケット1と3、応答側は4です。応答が2回目の後に見えたことは分かりますが、この短い記録だけで最初の要求や応答がどこで失われたかは断定できません。UDPでもDNS、DHCP、NTPなどはアプリ側のルールで要求・応答を行います。'
@@ -429,6 +430,14 @@ for (const capture of captures) {
     if (!p.smac) p.smac = knownMacs.get(p.src) || endpointMac(p.src);
     if (!p.dmac) p.dmac = knownMacs.get(p.dst) || endpointMac(p.dst);
   }
+}
+
+// Vary the displayed answer position deterministically; saved answers use value.
+let choiceIndex = 0;
+for (const lesson of lessons) for (const task of lesson.tasks) {
+  if (task.kind !== 'choice') continue;
+  const shift = choiceIndex++ % task.options.length;
+  task.options = [...task.options.slice(shift), ...task.options.slice(0, shift)];
 }
 
 module.exports = { chapters, captures, lessons };

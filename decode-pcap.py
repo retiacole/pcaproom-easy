@@ -15,6 +15,9 @@ def main():
     file, tshark = sys.argv[1:3]
     with tempfile.TemporaryDirectory(prefix='pcaproom-wireshark-') as profile:
         env = dict(os.environ)
+        # Display strings must not depend on the build machine's locale or zone.
+        env['TZ'] = 'UTC'
+        env['LC_ALL'] = 'C'
         # Never read or modify the user's Wireshark preferences, key files, or plugins.
         env['WIRESHARK_CONFIG_DIR'] = profile
         env['WIRESHARK_PLUGIN_DIR'] = os.path.join(profile, 'plugins')
@@ -29,7 +32,7 @@ def main():
                 field_types[columns[2]] = columns[3]
         base = ['-n', '-2', '-r', file, '-o', 'tcp.relative_sequence_numbers:TRUE', '-o', 'tcp.check_checksum:TRUE', '-o', 'udp.check_checksum:TRUE', '-o', 'ip.check_checksum:TRUE']
         pdml = ET.fromstring(run(base + ['-T', 'pdml']))
-        cols = list(csv.reader(io.StringIO(run(base + ['-T', 'fields', '-E', 'separator=\t', '-E', 'quote=d', '-e', '_ws.col.Source', '-e', '_ws.col.Destination', '-e', '_ws.col.Protocol', '-e', '_ws.col.Info'])), delimiter='\t', quotechar='"'))
+        cols = list(csv.reader(io.StringIO(run(base + ['-T', 'fields', '-E', 'separator=\t', '-E', 'quote=d', '-e', '_ws.col.Source', '-e', '_ws.col.Destination', '-e', '_ws.col.Protocol', '-e', '_ws.col.Info', '-e', 'frame.time_epoch', '-e', 'frame.time_delta'])), delimiter='\t', quotechar='"'))
 
         def scalar(field):
             key = field.get('name', '')
@@ -76,7 +79,7 @@ def main():
                     if node.get('hide') == 'yes':
                         continue
                     display = node.get('showname', node.get('show', key))
-                    entry = {'key':key, 'label':display.split(': ', 1)[0], 'value':value, 'display':display}
+                    entry = {'key':key, 'type':field_types.get(key, ''), 'label':display.split(': ', 1)[0], 'value':value, 'display':display}
                     if not reassembled and not key.startswith('tcp.reassembled.') and node.get('pos') is not None and node.get('size') is not None:
                         entry['offset'] = int(node.get('pos'))
                         entry['length'] = int(node.get('size'))
@@ -88,8 +91,13 @@ def main():
                     values = [v for k in sources for v in fields.get(k, [])]
                     if values:
                         fields[alias] = values
-            row = cols[index] + [''] * 4
-            packets.append({'number':int(fields['frame.number'][0]), 'time':float(fields['frame.time_relative'][0]), 'src':row[0], 'dst':row[1], 'protocol':row[2], 'length':int(fields['frame.len'][0]), 'info':row[3], 'layers':layers, 'fields':fields})
+            row = cols[index] + [''] * 6
+            # tshark can omit generated delta time from PDML unless requested.
+            # Explicit -e columns above still read the original PCAP timestamps.
+            timestamp_epoch, time_delta = float(row[4]), float(row[5] or 0)
+            fields['frame.time_epoch'] = [timestamp_epoch]
+            fields['frame.time_delta'] = [time_delta]
+            packets.append({'number':int(fields['frame.number'][0]), 'time':float(fields['frame.time_relative'][0]), 'timestampEpoch':timestamp_epoch, 'timeDelta':time_delta, 'src':row[0], 'dst':row[1], 'protocol':row[2], 'length':int(fields['frame.len'][0]), 'info':row[3], 'layers':layers, 'fields':fields})
         print(json.dumps({'packets':packets}, ensure_ascii=False, separators=(',',':')))
 
 
