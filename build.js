@@ -42,4 +42,8 @@ for(const [key,file]of Object.entries({CSS:'style.css',DATA:'data.js',ENGINE:'en
 }
 if(/\/\*__\w+__\*\//.test(html))throw new Error('Unreplaced build marker');
 fs.writeFileSync(path.join(__dirname,'pcaproom-easy.html'),html);
+const docsDir=path.join(__dirname,'docs');
+fs.mkdirSync(docsDir,{recursive:true});
+for(const filename of ['index.html','pcaproom-easy.html'])fs.writeFileSync(path.join(docsDir,filename),html);
+fs.writeFileSync(path.join(docsDir,'.nojekyll'),'');
 console.log(`Built ${lessons.length} lessons, ${captures.length} captures; ${(Buffer.byteLength(html)/1024/1024).toFixed(2)} MiB`);

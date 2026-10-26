@@ -6,6 +6,8 @@
 
 [English README](README.en.md) | 日本語
 
+**[すぐにやってみる](https://retiacole.github.io/pcaproom-easy/)** · [オフライン用HTML](https://github.com/retiacole/pcaproom-easy/blob/main/pcaproom-easy.html)
+
 <img src="docs/images/pcaproom-character.png" align="right" width="120" alt="白と青の衣装で杖と本を持つpcaproom-easyのキャラクター">
 
 **パケットを読み、通信の根拠を見つける。**<br>
@@ -23,13 +25,13 @@ HTML上部の **Language** メニューから **日本語 / English** を選べ�
 
 ## はじめ方
 
-1. [pcaproom-easy.html](https://github.com/retiacole/pcaproom-easy/blob/main/pcaproom-easy.html) を開き、右上の「Download raw file」で保存して、ブラウザで開きます。リポジトリの「Code → Download ZIP」で全体を保存・展開しても使えます。
+1. [すぐにやってみる](https://retiacole.github.io/pcaproom-easy/) を開きます。オフラインで使う場合は、[オフライン用HTML](https://github.com/retiacole/pcaproom-easy/blob/main/pcaproom-easy.html) の右上にある「Download raw file」で保存し、保存したHTMLをブラウザで開きます。リポジトリの「Code → Download ZIP」で全体を保存・展開しても使えます。
 2. 「最初のパケットを開く」から始めます。学習マップのどの章からでも選べます。
 3. パケット一覧のNo.を押して詳細を開き、必要な項目を選びます。
 4. 「根拠に追加」を押し、回答と一緒に答え合わせします。
 5. 複数設問がある問題は、すべて正解すると1フラグです。
 
-プレイ時のインストール・サーバー・アカウント・インターネット接続は不要です。JavaScriptとdialog要素に対応したブラウザが必要です。
+インストール・サーバーの準備・アカウント登録は不要です。オンライン版はページを開くだけで始められます。保存したHTMLはインターネット接続なしで利用できます。JavaScriptとdialog要素に対応したブラウザが必要です。
 
 ## 内容
 

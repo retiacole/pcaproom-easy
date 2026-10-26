@@ -6,6 +6,8 @@
 
 English | [日本語](README.md)
 
+**[Play Now](https://retiacole.github.io/pcaproom-easy/)** · [Offline HTML](https://github.com/retiacole/pcaproom-easy/blob/main/pcaproom-easy.html)
+
 <img src="docs/images/pcaproom-character.png" align="right" width="120" alt="The pcaproom-easy character in white and blue, holding a staff and a book">
 
 **Read packets. Follow the evidence.**
@@ -16,13 +18,13 @@ An offline introduction to reading network packets: **51 lessons, 95 questions**
 
 ## Start learning
 
-1. Open [pcaproom-easy.html on GitHub](https://github.com/retiacole/pcaproom-easy/blob/main/pcaproom-easy.html), choose **Download raw file**, and open the saved HTML in your browser. Downloading and extracting the repository ZIP also works.
+1. Open **[Play Now](https://retiacole.github.io/pcaproom-easy/)** to start in your browser. For offline use, open [Offline HTML](https://github.com/retiacole/pcaproom-easy/blob/main/pcaproom-easy.html), choose **Download raw file**, and open the saved HTML in your browser. Downloading and extracting the repository ZIP also works.
 2. Choose **English** from the **Language** menu in the HTML header. Japanese remains available in the same menu.
 3. Choose **Open your first packet**, or select any lesson on the learning map.
 4. Click a packet number, expand its protocol details, select a field, and choose **Add evidence**.
 5. Enter or select your answer and choose **Check answer**. Complete every question in a lesson to earn its flag.
 
-No installation, server, account, or Internet connection is needed to play. Use a browser with JavaScript and HTML dialog support. The single HTML file embeds all teaching data, styles, and scripts.
+No installation, server setup, or account is needed. Open the online version directly in your browser, or use the saved HTML without an Internet connection. Use a browser with JavaScript and HTML dialog support. The single HTML file embeds all teaching data, styles, and scripts.
 
 ## Language and progress
 
