@@ -104,7 +104,7 @@
   return {correct:true,reason:task.why||'パケットに記録された内容と一致しています。'};
  }
  function emptyProgress(){return {schemaVersion:VERSION,app:'pcaproom-easy',currentLesson:null,lessons:{}};}
- function emptyLesson(){return {answers:{},filter:'',timeMode:'relative',hints:0,solutionSeen:false,complete:false,completedAt:null,selected:1};}
+ function emptyLesson(){return {answers:{},filter:'',timeMode:'relative',hints:0,reflection:'',solutionSeen:false,complete:false,completedAt:null,selected:1};}
  function formatTime(packet,mode='relative'){
   if(mode==='utc'){
    const epoch=packet.timestampEpoch??fieldValues(packet,'frame.time_epoch')[0],micros=Math.round(Number(epoch)*1000000);
@@ -126,6 +126,7 @@
    try{compileFilter(state.filter,capture.packets);}catch{state.filter='';}
    state.hints=Number.isInteger(from.hints)?Math.min(3,Math.max(0,from.hints)):0;
    state.solutionSeen=from.solutionSeen===true;
+   state.reflection=lesson.reflection&&typeof from.reflection==='string'?from.reflection.slice(0,2000):'';
    state.selected=capture.packets.some(p=>p.number===from.selected)?from.selected:1;
    for(const task of lesson.tasks){const e=from.answers?.[task.id];if(!e||typeof e!=='object')continue;
     const answer=(task.kind==='order'||task.kind==='packets')?(Array.isArray(e.answer)?e.answer.filter(n=>Number.isInteger(n)&&capture.packets.some(p=>p.number===n)).slice(0,100):[]):typeof e.answer==='string'?e.answer.slice(0,2000):'';

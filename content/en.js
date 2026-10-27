@@ -132,4 +132,6 @@ const glossary=[
 ['Display filter','Shows matching packets from a loaded capture without deleting the original data. Capture filters used during collection have different purposes and syntax.'],
 ['Reassembled field','Information decoded by combining packets. It may have no corresponding byte range in the selected individual frame.']
 ].map(([term,description])=>({term,description}));
+const correlation=require('./correlation').en;
+Object.assign(chapters,correlation.chapters);Object.assign(lessons,correlation.lessons);
 module.exports={chapters,captures,lessons,glossary};

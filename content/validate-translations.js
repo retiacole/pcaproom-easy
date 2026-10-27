@@ -6,9 +6,17 @@ module.exports=function validateTranslations(data,en){
   const canonical=data[kind],translations=en[kind];
   for(const item of canonical){const t=translations[item.id];if(!t){errors.push(`Missing English ${kind}: ${item.id}`);continue;}
    for(const field of fields)text(t[field],`${item.id}.${field}`);
-   const allowed=new Set([...fields,...(kind==='lessons'?['hints','tasks']:[])]);
+   const allowed=new Set([...fields,...(kind==='lessons'?['hints','tasks','referenceCards']:[])]);
    for(const key of Object.keys(t))if(!allowed.has(key))errors.push(`English must not override ${item.id}.${key}`);
    if(kind==='lessons'){
+    if(item.referenceCards){
+     if(t.referenceCards?.length!==item.referenceCards.length)errors.push(`English reference count: ${item.id}`);
+     item.referenceCards.forEach((card,i)=>{const tr=t.referenceCards?.[i]||{};
+      text(tr.title,`${item.id}.referenceCards.${i}.title`);text(tr.body,`${item.id}.referenceCards.${i}.body`);
+      for(const key of Object.keys(tr))if(!['title','body'].includes(key))errors.push(`English must not override reference ${item.id}.${key}`);
+     });
+    }
+
     if(t.hints?.length!==3)errors.push(`Three English hints required: ${item.id}`);
     t.hints?.forEach((h,i)=>text(h,`${item.id}.hints.${i}`));
     if(t.tasks?.length!==item.tasks.length)errors.push(`English task count: ${item.id}`);

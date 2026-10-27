@@ -136,9 +136,9 @@ test('all 45 completion proofs from v0.1 survive the upgraded curriculum',()=>{
  assert.equal(Object.values(restored.lessons).filter(s=>s.complete).length,45);
 });
 
-test('all 51 lessons validate, every official answer passes, wrong answers fail, evidence is selectable',()=>{
+test('all 54 lessons validate, every official answer passes, wrong answers fail, evidence is selectable',()=>{
  const data=builtData();assert.deepEqual(E.validateData(data),[]);
- assert.equal(data.lessons.length,51);let tasks=0;
+ assert.equal(data.lessons.length,54);let tasks=0;
  for(const lesson of data.lessons){
   const cap=data.captures.find(c=>c.id===lesson.captureId);const filter=lesson.tasks.find(t=>t.kind==='filter')?.expectedFilter||officialFilters[lesson.id]||'';
   for(const t of lesson.tasks){
@@ -155,8 +155,24 @@ test('complete curriculum progress survives a validated export/import round trip
  const data=builtData(),raw=E.emptyProgress();raw.currentLesson=data.lessons.at(-1).id;
  for(const lesson of data.lessons)raw.lessons[lesson.id]={...E.emptyLesson(),filter:lesson.tasks.find(t=>t.kind==='filter')?.expectedFilter||officialFilters[lesson.id]||'',complete:true,completedAt:'2026-10-25T12:00:00Z',answers:Object.fromEntries(lesson.tasks.map(t=>[t.id,officialEntry(t)]))};
  const restored=E.hydrate(JSON.parse(JSON.stringify(raw)),data);
- assert.equal(Object.values(restored.lessons).filter(s=>s.complete).length,51);
+ assert.equal(Object.values(restored.lessons).filter(s=>s.complete).length,54);
  assert.equal(restored.currentLesson,raw.currentLesson);
+});
+
+test('correlation case matches packet time and log IDs without inventing a request ID in the PCAP',()=>{
+ const data=builtData(),lesson=data.lessons.find(l=>l.id==='correlation-logs'),cap=data.captures.find(c=>c.id===lesson.captureId);
+ const task=lesson.tasks[0],request=cap.packets.find(p=>p.number===task.evidence[0].frame),response=cap.packets.find(p=>p.number===task.evidence[1].frame);
+ assert.deepEqual(request.fields['http.request.uri'],['/reports/latest']);
+ assert.deepEqual(response.fields['http.response.code'],[404]);
+ const epoch=Number(response.fields['frame.time_epoch'][0]);
+ assert.ok(epoch>=Date.parse('2026-01-01T09:00:21+09:00')/1000&&epoch<Date.parse('2026-01-01T09:00:22+09:00')/1000);
+ assert.doesNotMatch(Buffer.from(cap.pcapBase64,'base64').toString('latin1'),/req-report-042/);
+ assert.match(lesson.referenceCards[1].rows.find(r=>r.id==='A3').text,/request_id=req-report-042/);
+ assert.match(lesson.referenceCards[2].rows.find(r=>r.id==='B2').text,/request_id=req-report-042/);
+ assert.equal(E.gradeTask(task,{answer:'A1',evidence:task.evidence},cap).correct,false);
+ assert.equal(E.gradeTask(task,{answer:'A3',evidence:task.evidence.slice(0,1)},cap).correct,false);
+ const raw=E.emptyProgress();raw.lessons['correlation-report']={...E.emptyLesson(),reflection:'x'.repeat(3000)};
+ assert.equal(E.hydrate(raw,data).lessons['correlation-report'].reflection.length,2000);
 });
 
 test('every authored capture has actual PCAP bytes, consistent frame lengths and no malformed/checksum errors',()=>{

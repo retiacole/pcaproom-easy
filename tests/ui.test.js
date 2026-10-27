@@ -38,6 +38,38 @@ function assembleHtml() {
 
 const html = assembleHtml();
 
+test('correlation references, optional note and graduation recommendation survive language and import', async()=>{
+ const app=createApp();let reload;
+ try{
+  assert.equal(app.query('.topbar .version-badge').textContent,`v${require('../package.json').version}`);
+  assert.equal(app.document.querySelector('.room-recommendation'),null);
+  openLesson(app,'correlation-logs');
+  assert.equal(app.document.querySelectorAll('.reference-row').length,8);
+  const raw=app.query('[data-reference="access"]').textContent;
+  assert.match(raw,/08:59:55 \+0900/);assert.match(raw,/req-report-042/);
+  app.change('#language-select','en');
+  assert.match(app.query('[data-reference="access"] h2').textContent,/Access logs/);
+  const data=app.window.PcapData,localized=app.window.PcapI18n.localize(data);
+  assert.equal(localized.lessons.at(-1).referenceCards[1].rows,data.lessons.at(-1).referenceCards[1].rows,'translation retains canonical evidence rows');
+  for(const l of data.lessons.filter(l=>l.chapter==='log-correlation'))solveLesson(app,l);
+  assert.match(app.query('.room-recommendation').textContent,/optional/);
+  assert.ok(app.query('[data-action="home"]'));
+  const note='404 / No. 220, A3, B2\nCause unknown; ask application owner for generation logs. <script>draft</script>';
+  app.input('#reflection-note',note);
+  app.change('#language-select','ja');assert.equal(app.query('#reflection-note').value,note);
+  app.click('[data-action="report-note"]');
+  assert.equal(app.downloads.at(-1).name,'pcaproom-handoff-note.txt');
+  assert.match(await app.downloads.at(-1).blob.text(),/Cause unknown/);
+  const exported=JSON.stringify(saved(app));
+  await importText(app,exported);app.click('[data-action="confirm-import"]');
+  openLesson(app,'correlation-report');assert.equal(app.query('#reflection-note').value,note);
+  reload=createApp({storage:new Map(app.storage),expectedFlags:3});
+  assert.ok(reload.query('.room-recommendation'));
+  openLesson(reload,'correlation-report');assert.equal(reload.query('#reflection-note').value,note);
+  assert.equal(app.errors.length,0);assert.equal(reload.errors.length,0);
+ }finally{app.window.close();reload?.window.close();}
+});
+
 function createApp({ storage = new Map(), unavailable = false, expectedFlags = 0, language } = {}) {
   if(language)storage.set('pcaproom-easy.language.v1',language);
   const errors = [], downloads = [], urls = new Map();
@@ -174,13 +206,13 @@ async function importText(app, content, size = Buffer.byteLength(content)) {
   await new Promise(resolve => setImmediate(resolve));
 }
 
-for(const language of ['ja','en'])test(`all 51 lessons are solvable in ${language}; progress reloads`, { timeout: 240000 }, () => {
+for(const language of ['ja','en'])test(`all 54 lessons are solvable in ${language}; progress reloads`, { timeout: 240000 }, () => {
   const app = createApp({language});
   let reload;
   try {
     const lessons = app.window.PcapData.lessons;
-    assert.equal(lessons.length, 51);
-    assert.equal(app.document.querySelectorAll('.lesson-link').length, 51, 'all lessons accessible from the map');
+    assert.equal(lessons.length, 54);
+    assert.equal(app.document.querySelectorAll('.lesson-link').length, 54, 'all lessons accessible from the map');
     const kinds = new Set();
     let answered = 0;
     for (const [index, lesson] of lessons.entries()) {
@@ -194,21 +226,21 @@ for(const language of ['ja','en'])test(`all 51 lessons are solvable in ${languag
     assert.deepEqual([...kinds].sort(), ['choice', 'filter', 'order', 'packets', 'text']);
     assert.equal(answered, lessons.reduce((sum, lesson) => sum + lesson.tasks.length, 0), 'every individual task is exercised');
     app.click('[data-action="home"]');
-    assert.equal(app.query('[role="progressbar"]').getAttribute('aria-valuenow'), '51');
-    assert.ok(app.query('.hero-metrics').textContent.includes(language==='en'?'5100 points':'5100ポイント'));
-    assert.equal(app.document.querySelectorAll('.lesson-link.done').length, 51);
+    assert.equal(app.query('[role="progressbar"]').getAttribute('aria-valuenow'), '54');
+    assert.ok(app.query('.hero-metrics').textContent.includes(language==='en'?'5400 points':'5400ポイント'));
+    assert.equal(app.document.querySelectorAll('.lesson-link.done').length, 54);
 
     // Learners may explore a different filter after winning a flag. The saved
     // completion proof must survive, even when their current view no longer
     // matches the original answer to a filter exercise.
     openLesson(app, 'ops-filter-1');
     applyFilter(app, 'frame.number == 1');
-    assert.equal(completed(saved(app)), 51);
+    assert.equal(completed(saved(app)), 54);
     const snapshot = new Map(app.storage);
     app.dom.window.close();
     reload = createRestoredApp(snapshot);
-    assert.equal(reload.query('#top-count').textContent, '51');
-    assert.equal(reload.document.querySelectorAll('.lesson-link.done').length, 51);
+    assert.equal(reload.query('#top-count').textContent, '54');
+    assert.equal(reload.document.querySelectorAll('.lesson-link.done').length, 54);
     openLesson(reload, 'ops-filter-1');
     assert.equal(reload.query('#filter-input').value, 'frame.number == 1');
     assert.ok(reload.query('#completion-area').textContent.includes(language==='en'?'100 points':'100ポイント'), 'completion remains after exploratory filter edit and reload');
@@ -696,7 +728,7 @@ test('English content covers every presentation field while canonical answers an
  try{
   const source=app.window.PcapData,translated=app.window.PcapI18n.localize(source);
   assert.equal(require('../content/validate-translations')(source,source.translations.en).length,0);
-  assert.equal(source.lessons.length,51);assert.equal(source.lessons.reduce((n,l)=>n+l.tasks.length,0),95);
+  assert.equal(source.lessons.length,54);assert.equal(source.lessons.reduce((n,l)=>n+l.tasks.length,0),101);
   for(const [i,l]of translated.lessons.entries())for(const [j,t]of l.tasks.entries()){
    const original=source.lessons[i].tasks[j];for(const key of ['id','kind','answer','evidence','normalize','evidenceMode','expectedFilter'])assert.equal(t[key],original[key],`${l.id}/${t.id}: ${key}`);
    if(t.options)assert.deepEqual(Array.from(t.options,o=>o.value),Array.from(original.options,o=>o.value));

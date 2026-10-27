@@ -1,10 +1,17 @@
 {
   "name": "pcaproom-easy",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
-  "description": "パケットを読んで根拠を選ぶ、オフラインのネットワーク入門51問",
+  "description": "パケットを読んで根拠を選ぶ、オフラインのネットワーク入門54問",
   "license": "MIT",
-  "scripts": {"build": "node build.js", "test": "node --test tests/*.test.js"},
-  "engines": {"node": ">=22"},
-  "devDependencies": {"jsdom": "26.1.0"}
+  "scripts": {
+    "build": "node build.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0"
+  }
 }

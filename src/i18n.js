@@ -89,6 +89,9 @@ const messages={
 '根拠のパケットと項目を確認しましょう。別の通信の値が混ざっていないかも見てください。':'Check the evidence packets and fields. Make sure they belong to the intended exchange.','回答を裏づける項目を詳細欄から選び、「根拠に追加」を押してください。':'Select a supporting field in the details and click Add evidence.','パケットに記録された内容と一致しています。':'Your answer matches the recorded packet data.',
 'pcaproom-easyの保存ファイルではないか、対応していない版です。':'This is not a supported pcaproom-easy progress file.'
 };
+Object.assign(messages,{"ここまできたら、次のおすすめ": "Ready for another room?", "通信の根拠を使う練習の次は、SOCroomで判断・連絡・報告をまとめて練習できます。移動は任意です。このroomの練習や復習も、そのまま続けられます。": "After practicing packet evidence, try SOCroom for decisions, communication, and reporting. Moving is optional. You can continue practicing and reviewing in this room.", "SOCroomを開く ↗": "Open SOCroom ↗", "自分の引継ぎメモ（任意）": "Your handoff note (optional)", "事実・出典・未確認事項・次の確認先と資料を、短く書いてみましょう。": "Briefly record facts, sources, open questions, and the owner and records to check next.", "メモは進捗と一緒に保存します。文章の意味は自動採点しません。解説を開き、4つの観点で自己比較できます。": "Your note is saved with progress. Its meaning is not automatically graded. Open the explanation and compare these four aspects yourself.", "メモをテキスト保存": "Save note as text"});
+Object.assign(messages,{'関連資料を読む ↓':'Read related records ↓','設問へ戻る ↑':'Back to the question ↑'});
+Object.assign(messages,{'オフラインでは、入手済みのsocroom.htmlを同じフォルダに置いて開けます。':'Offline, place your downloaded socroom.html in the same folder to open it.','調査に使う操作を確かめる（任意）':'Review investigation skills (optional)','初めてなら学習マップの01から。操作に慣れている人は、下の課題で方向・絞り込み・接続・名前解決・応答・観測の限界を確かめ、背景通信の調査とログ照合へ進めます。全章を続けたり、分からない所だけ戻ったりして構いません。順番や全問完了は必須ではありません。':'If you are new, start with chapter 01. If you know the interface, use these lessons to review direction, filtering, connections, name resolution, responses, and visibility limits, then investigate background traffic and correlate logs. You may continue through every chapter or revisit only unfamiliar topics. Neither this order nor completing every lesson is required.'});
 const patterns=[
 [/^(.*?)（再構成したデータ）$/,(_,s)=>`${s} (reassembled data)`],
 [/^ARP・UDP・ICMPからWeb通信まで、(\d+)の小さな練習。$/,(_,n)=>`${n} short exercises, from ARP, UDP, and ICMP to web traffic.`],
@@ -130,13 +133,13 @@ function apply(scope=document){
  }
  document.documentElement.lang=locale;
  document.title=locale==='en'?'pcaproom-easy — Your first steps in packet reading':'pcaproom-easy — パケットを読む、最初の一歩';
- document.querySelector('meta[name="description"]').content=locale==='en'?'Open packets, read details, and choose evidence. 51 offline networking lessons.':'パケットを開いて、読んで、根拠を選ぶ。51問のオフラインネットワーク入門。';
+ document.querySelector('meta[name="description"]').content=locale==='en'?`Open packets, read details, and choose evidence. ${root.PcapData.lessons.length} offline networking lessons.`:`パケットを開いて、読んで、根拠を選ぶ。${root.PcapData.lessons.length}問のオフラインネットワーク入門。`;
  const select=document.getElementById('language-select');if(select)select.value=locale;
 }
 function localize(data){if(locale==='ja')return data;const en=data.translations.en;return {...data,
  chapters:data.chapters.map(c=>({...c,...en.chapters[c.id]})),
  captures:data.captures.map(c=>({...c,...en.captures[c.id]})),
- lessons:data.lessons.map(l=>{const tr=en.lessons[l.id];return {...l,...tr,tasks:l.tasks.map((t,i)=>({...t,prompt:tr.tasks[i].prompt,why:tr.tasks[i].why,...(t.options?{options:t.options.map(o=>({...o,label:tr.tasks[i].options[o.value]}))}:{})}))};}),
+ lessons:data.lessons.map(l=>{const tr=en.lessons[l.id];return {...l,...tr,...(l.referenceCards?{referenceCards:l.referenceCards.map((c,i)=>({...c,title:tr.referenceCards[i].title,body:tr.referenceCards[i].body}))}:{}),tasks:l.tasks.map((t,i)=>({...t,prompt:tr.tasks[i].prompt,why:tr.tasks[i].why,...(t.options?{options:t.options.map(o=>({...o,label:tr.tasks[i].options[o.value]}))}:{})}))};}),
  glossary:en.glossary
 };}
 function setLocale(value){locale=value==='en'?'en':'ja';try{localStorage.setItem(STORE,locale);}catch{}return locale;}

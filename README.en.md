@@ -2,7 +2,7 @@
   <img src="docs/images/pcaproom-banner.png" width="960" alt="Pixel art of the pcaproom-easy character praying in a cathedral with stained-glass windows">
 </p>
 
-# pcaproom-easy v0.3.0
+# pcaproom-easy v0.4.0
 
 English | [日本語](README.md)
 
@@ -12,7 +12,7 @@ English | [日本語](README.md)
 
 **Read packets. Follow the evidence.**
 
-An offline introduction to reading network packets: **51 lessons, 95 questions**, and 12 protocol topics in a Wireshark-style interface. Open packets, read their details, and support answers with selected evidence.
+An offline introduction to reading network packets: **54 lessons, 101 questions**, and 12 protocol topics in a Wireshark-style interface. Open packets, read their details, and support answers with selected evidence.
 
 <br clear="right">
 
@@ -45,8 +45,15 @@ Progress uses `pcaproom-easy.progress.v1`; language uses the separate key `pcapr
 | Final investigations | Joining a network, connection failure, web results and visibility | 3 |
 | Real-capture skills | TCP options/raw numbers, DNS/DHCP extras, timestamps/padding | 3 |
 | Busy-LAN investigation | Filter 284 packets to investigate DNS, TCP, and HTTP | 3 |
+| Packet/log correlation | Request/response, UTC/JST and request_id, evidence-based handoff | 3 |
 
-There are 17 chapters with three lessons each. Guided exercises lead into practice and independent work. Every lesson includes three hints and an answer explanation. Each completed lesson earns one flag and 100 points: **51 flags and 5,100 points** total. There is no time limit and no penalty for mistakes or hints. Reading an explanation alone does not award a flag. Earned flags remain when you edit answers during review.
+There are 18 chapters with three lessons each. Guided exercises lead into practice and independent work. Every lesson includes three hints and an answer explanation. Each completed lesson earns one flag and 100 points: **54 flags and 5,400 points** total. There is no time limit and no penalty for mistakes or hints. Reading an explanation alone does not award a flag. Earned flags remain when you edit answers during review.
+
+## Added in v0.4
+
+Three lessons and six questions reuse the 284-packet capture with small access/audit log references: isolate the exchange, correlate UTC/JST and observation ranges using several fields, then hand off facts and open questions. Document row IDs are distinct from packet numbers, and the server request_id is not assumed to exist in the PCAP. No other room or shared progress is required.
+
+An optional map route links the skills used in investigations without locking any lesson. The optional final note is saved in progress JSON and can be exported as text. Free text is for self-comparison, not semantic grading. Completing either the graduation investigation or all three correlation lessons displays an optional SOCroom recommendation; practice and review remain available. The top version badge is synchronized with package.json.
 
 ## Features
 
@@ -97,7 +104,7 @@ Defaults are `/usr/bin/python3` and `/usr/local/bin/tshark`. Set `PCAPROOM_PYTHO
 - `src/data.js`, `captures/`, `pcaproom-easy.html`: generated deliverables.
 - `tests/`: packet, engine, and DOM integration checks.
 
-The automated tests cover packet checksums, all 51 lessons and 95 questions through the UI in both Japanese and English, evidence requirements, all flags, legacy progress, reload/import, time modes, PCAP bytes, stream reassembly, language persistence, translation coverage, and state preservation during switching. Tests also compare new filters with tshark and verify deterministic decoding across timezone/locale settings. Additional checks compare field-generated address, string, and numeric filters and UDP inside ICMP errors with tshark, and verify packet-list scroll preservation during inspection and language changes. DOM tests do not validate actual browser rendering or download UI.
+The automated tests cover packet checksums, all 54 lessons and 101 questions through the UI in both Japanese and English, evidence requirements, all flags, legacy progress, reload/import, time modes, PCAP bytes, stream reassembly, language persistence, translation coverage, and state preservation during switching. Tests also compare new filters with tshark and verify deterministic decoding across timezone/locale settings. Additional checks compare field-generated address, string, and numeric filters and UDP inside ICMP errors with tshark, and verify packet-list scroll preservation during inspection and language changes. DOM tests do not validate actual browser rendering or download UI.
 
 jsdom is required only for tests. To reuse an existing installation, set `PCAPROOM_JSDOM_MODULE` to its module path. To test the shipped HTML directly, set `PCAPROOM_HTML` to that file's path.
 
