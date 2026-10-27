@@ -21,8 +21,9 @@ An offline introduction to reading network packets: **51 lessons, 95 questions**
 1. Open **[Play Now](https://retiacole.github.io/pcaproom-easy/)** to start in your browser. For offline use, open [Offline HTML](https://github.com/retiacole/pcaproom-easy/blob/main/pcaproom-easy.html), choose **Download raw file**, and open the saved HTML in your browser. Downloading and extracting the repository ZIP also works.
 2. Choose **English** from the **Language** menu in the HTML header. Japanese remains available in the same menu.
 3. Choose **Open your first packet**, or select any lesson on the learning map.
-4. Click a packet number, expand its protocol details, select a field, and choose **Add evidence**.
-5. Enter or select your answer and choose **Check answer**. Complete every question in a lesson to earn its flag.
+4. Click a packet number, read its details, and enter or select your answer in **① Answer**.
+5. When **② Add evidence** appears, evidence is required too. Choose **Choose evidence** to move to **Packet Details**, then click the detail row that supports your answer. Use **Add this row as evidence for question 1** beside the selected row (the number follows the current question). Selecting a row alone does not add it.
+6. Once the answer panel shows the evidence packet number, field name, and value, check your answer and evidence. Complete every question in a lesson to earn its flag.
 
 No installation, server setup, or account is needed. Open the online version directly in your browser, or use the saved HTML without an Internet connection. Use a browser with JavaScript and HTML dialog support. The single HTML file embeds all teaching data, styles, and scripts.
 
@@ -96,7 +97,7 @@ Defaults are `/usr/bin/python3` and `/usr/local/bin/tshark`. Set `PCAPROOM_PYTHO
 - `src/data.js`, `captures/`, `pcaproom-easy.html`: generated deliverables.
 - `tests/`: packet, engine, and DOM integration checks.
 
-The 50 automated tests cover packet checksums, all 51 lessons and 95 questions through the UI in both Japanese and English, evidence requirements, all flags, legacy progress, reload/import, time modes, PCAP bytes, stream reassembly, language persistence, translation coverage, and state preservation during switching. Tests also compare new filters with tshark and verify deterministic decoding across timezone/locale settings. Additional checks compare field-generated address, string, and numeric filters and UDP inside ICMP errors with tshark, and verify packet-list scroll preservation during inspection and language changes. DOM tests do not validate actual browser rendering or download UI.
+The automated tests cover packet checksums, all 51 lessons and 95 questions through the UI in both Japanese and English, evidence requirements, all flags, legacy progress, reload/import, time modes, PCAP bytes, stream reassembly, language persistence, translation coverage, and state preservation during switching. Tests also compare new filters with tshark and verify deterministic decoding across timezone/locale settings. Additional checks compare field-generated address, string, and numeric filters and UDP inside ICMP errors with tshark, and verify packet-list scroll preservation during inspection and language changes. DOM tests do not validate actual browser rendering or download UI.
 
 jsdom is required only for tests. To reuse an existing installation, set `PCAPROOM_JSDOM_MODULE` to its module path. To test the shipped HTML directly, set `PCAPROOM_HTML` to that file's path.
 

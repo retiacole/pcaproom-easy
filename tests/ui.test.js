@@ -117,7 +117,7 @@ function chooseTask(app, index, count) {
     assert.equal(app.query(`[data-task="${index}"]`).getAttribute('aria-pressed'), 'true');
   }
 }
-function addEvidence(app, evidence) {
+function selectEvidenceField(app, evidence) {
   app.click(`[data-packet="${evidence.frame}"]`);
   assert.match(app.query('#selected-number').textContent, new RegExp(`No\\. ${evidence.frame}$`));
   let field = [...app.document.querySelectorAll('.field')].find(node => node.querySelector('.field-key')?.textContent === evidence.field);
@@ -129,7 +129,10 @@ function addEvidence(app, evidence) {
   for(let disclosure=field.closest('details');disclosure;disclosure=disclosure.parentElement.closest('details'))disclosure.open=true;
   app.click(field);
   assert.ok(app.query('#selected-field').textContent.includes(evidence.field));
-  app.click('#add-evidence');
+}
+function addEvidence(app, evidence) {
+  selectEvidenceField(app, evidence);
+  if (!app.query('#add-evidence').disabled) app.click('#add-evidence');
   assert.ok(app.query('.evidence-list').textContent.includes(`No. ${evidence.frame} · ${evidence.field}`));
 }
 function solveLesson(app, lesson) {
@@ -349,6 +352,173 @@ test('hints, solutions, blank evidence and unrelated evidence do not award flags
     assert.equal(completed(saved(app)), 0);
     assert.equal(app.errors.length, 0);
   } finally { app.dom.window.close(); }
+});
+
+test('evidence guidance distinguishes inspecting, adding and removing a detail row', () => {
+  const app = createApp();
+  try {
+    openLesson(app, 'ops-view-1');
+    assert.match(app.query('#answer-status').textContent, /未入力/);
+    assert.match(app.query('#evidence-status').textContent, /未追加/);
+    assert.equal(app.document.querySelector('#add-evidence'), null, 'adding is offered beside a selected row');
+    assert.match(app.query('[data-action="check"]').textContent, /根拠を選ぶ/);
+
+    app.click('[data-action="check"]');
+    assert.equal(app.document.activeElement.id, 'packet-details-title', 'guidance focuses the detail heading, not a correct answer');
+    assert.equal(app.document.querySelector('.field.active'), null, 'guidance does not select a field for the learner');
+    app.input('#answer-input', '10.0.0.10');
+    assert.match(app.query('#answer-status').textContent, /入力済み/);
+    app.click('[data-action="check"]');
+    assert.match(app.query('#feedback').textContent, /根拠/);
+    assert.doesNotMatch(app.query('#feedback').textContent, /もう一度、確かめよう/);
+    assert.equal(app.query('#answer-input').value, '10.0.0.10', 'guidance preserves the entered answer');
+    assert.equal(app.document.activeElement.id, 'packet-details-title');
+
+    selectEvidenceField(app, { frame: 1, field: 'ip.src' });
+    assert.equal(app.document.querySelectorAll('.evidence-item').length, 0, 'reading a field never adds it automatically');
+    assert.deepEqual(saved(app).lessons['ops-view-1'].answers.source.evidence, []);
+    assert.ok(app.query('#add-evidence').closest('.field-evidence-action'), 'the add action stays beside the selected row');
+    assert.equal(app.query('#add-evidence').disabled, false);
+    app.click('#add-evidence');
+    assert.match(app.query('#evidence-status').textContent, /1件追加済み/);
+    assert.match(app.query('.evidence-list').textContent, /Source Address/);
+    assert.match(app.query('.evidence-list').textContent, /10\.0\.0\.10/);
+    assert.equal(app.query('#add-evidence').disabled, true, 'the same row cannot be added twice');
+    assert.match(app.query('[data-action="check"]').textContent, /回答と根拠を答え合わせ/);
+    assert.match(app.query('[data-action="choose-evidence"]').textContent, /根拠を追加・変更/);
+    assert.equal(app.query('#top-count').textContent, '0', 'added does not mean graded correct');
+
+    app.click('[data-remove-evidence="0"]');
+    assert.match(app.query('#evidence-status').textContent, /未追加/);
+    assert.equal(app.query('#add-evidence').disabled, false);
+    assert.match(app.query('[data-action="check"]').textContent, /根拠を選ぶ/);
+    assert.equal(app.errors.length, 0, app.errors.map(e => e.stack).join('\n'));
+  } finally { app.window.close(); }
+});
+
+test('inline evidence actions and summaries belong to the current task and survive language changes', () => {
+  const app = createApp();
+  try {
+    const lesson = app.window.PcapData.lessons.find(l => l.id === 'base-ethernet-3');
+    openLesson(app, lesson.id);
+    addEvidence(app, lesson.tasks[0].evidence[0]);
+    assert.match(app.query('#add-evidence').textContent, /追加済み/);
+    chooseTask(app, 1, lesson.tasks.length);
+    assert.match(app.query('#evidence-status').textContent, /未追加/);
+    assert.equal(app.document.querySelectorAll('.evidence-item').length, 0);
+    assert.equal(app.query('#add-evidence').disabled, false, 'a row saved to another task is not already added here');
+    assert.match(app.query('#add-evidence').textContent, /設問2/);
+    addEvidence(app, lesson.tasks[1].evidence[0]);
+    assert.match(app.query('.evidence-list').textContent, /192\.0\.2\.80/);
+    const before = JSON.stringify(saved(app));
+    app.change('#language-select', 'en');
+    assertEnglish(app);
+    assert.equal(JSON.stringify(saved(app)), before);
+    assert.equal(app.query('#add-evidence').disabled, true);
+    assert.match(app.query('.evidence-list').textContent, /192\.0\.2\.80/);
+    app.change('#language-select', 'ja');
+    chooseTask(app, 0, lesson.tasks.length);
+    assert.match(app.query('.evidence-list').textContent, /02:10:00:00:03:01/);
+    assert.doesNotMatch(app.query('.evidence-list').textContent, /192\.0\.2\.80/);
+    const answers = saved(app).lessons[lesson.id].answers;
+    assert.equal(answers[lesson.tasks[0].id].evidence.length, 1);
+    assert.equal(answers[lesson.tasks[1].id].evidence.length, 1);
+    assert.equal(app.errors.length, 0, app.errors.map(e => e.stack).join('\n'));
+  } finally { app.window.close(); }
+});
+
+test('required evidence counts describe submission requirements without grading selected rows early', () => {
+  const app = createApp();
+  let anyApp;
+  try {
+    const lesson = app.window.PcapData.lessons.find(l => l.id === 'base-arp-2');
+    const task = lesson.tasks[0];
+    openLesson(app, lesson.id);
+    assert.match(app.query('#answer-area').textContent, /必要な根拠：2件/);
+    app.input('#answer-input', task.answer);
+    addEvidence(app, task.evidence[0]);
+    assert.match(app.query('#evidence-status').textContent, /1件追加済み/);
+    app.click('[data-action="check"]');
+    assert.equal(app.query('#feedback .feedback').classList.contains('success'), false, 'all-mode needs every required item');
+    addEvidence(app, { frame: 3, field: 'arp.opcode' });
+    assert.match(app.query('#evidence-status').textContent, /2件追加済み/);
+    assert.doesNotMatch(app.query('#evidence-status').textContent, /正解/);
+    app.click('[data-action="check"]');
+    assert.equal(app.query('#feedback .feedback').classList.contains('success'), false, 'the count alone never satisfies grading');
+    app.click('[data-remove-evidence="1"]');
+    addEvidence(app, task.evidence[1]);
+    app.click('[data-action="check"]');
+    assert.equal(app.query('#feedback .feedback').classList.contains('success'), true);
+
+    // Exercise the supported "any" contract with two alternatives. The fixture
+    // is local to this isolated app; the shipped all-mode lesson stays intact.
+    anyApp = createApp();
+    const anyLesson = anyApp.window.PcapData.lessons.find(l => l.id === lesson.id);
+    anyLesson.tasks[0].evidenceMode = 'any';
+    openLesson(anyApp, anyLesson.id);
+    assert.doesNotMatch(anyApp.query('#answer-area').textContent, /必要な根拠：2件/);
+    assert.match(anyApp.query('#answer-area').textContent, /1件以上/);
+    anyApp.input('#answer-input', anyLesson.tasks[0].answer);
+    addEvidence(anyApp, anyLesson.tasks[0].evidence[0]);
+    anyApp.click('[data-action="check"]');
+    assert.equal(anyApp.query('#feedback .feedback').classList.contains('success'), true, 'any-mode accepts one of several valid alternatives');
+    assert.equal(app.errors.length, 0, app.errors.map(e => e.stack).join('\n'));
+    assert.equal(anyApp.errors.length, 0, anyApp.errors.map(e => e.stack).join('\n'));
+  } finally { app.window.close(); anyApp?.window.close(); }
+});
+
+test('English evidence guidance is translated and evidence-free tasks keep their normal flow', () => {
+  const app = createApp({ language: 'en' });
+  try {
+    openLesson(app, 'ops-view-1');
+    assertEnglish(app);
+    app.input('#answer-input', '10.0.0.10');
+    app.click('[data-action="check"]');
+    assertEnglish(app);
+    assert.equal(app.document.activeElement.id, 'packet-details-title');
+    selectEvidenceField(app, { frame: 1, field: 'ip.src' });
+    assertEnglish(app);
+    app.click('#add-evidence');
+    assertEnglish(app);
+    app.click('[data-remove-evidence="0"]');
+    assertEnglish(app);
+
+    openLesson(app, 'ops-filter-1');
+    assert.equal(app.document.querySelector('#evidence-status'), null);
+    assert.equal(app.document.querySelector('[data-action="choose-evidence"]'), null);
+    selectEvidenceField(app, { frame: 1, field: 'ip.src' });
+    assert.equal(app.document.querySelector('#add-evidence'), null, 'inspection does not offer irrelevant evidence actions');
+    assert.equal(app.query('#field-filter').disabled, false, 'field inspection still supports filter creation');
+    applyFilter(app, 'dns');
+    app.click('[data-action="check"]');
+    assert.equal(app.query('#feedback .feedback').classList.contains('success'), true);
+    assertEnglish(app);
+    assert.equal(app.errors.length, 0, app.errors.map(e => e.stack).join('\n'));
+  } finally { app.window.close(); }
+});
+
+test('evidence summaries show every occurrence of a repeated field and escape decoded values', () => {
+  const app = createApp();
+  try {
+    openLesson(app, 'ops-view-1');
+    app.click('[data-packet="2"]');
+    app.click('[data-action="all-fields"]');
+    const rootField = [...app.document.querySelectorAll('.field')].find(node =>
+      node.querySelector('.field-key')?.textContent === 'dns.resp.name' &&
+      node.querySelector('.field-value')?.textContent === '<Root>');
+    assert.ok(rootField, 'the second DNS Name occurrence is available to inspect');
+    for (let disclosure = rootField.closest('details'); disclosure; disclosure = disclosure.parentElement.closest('details')) disclosure.open = true;
+    app.click(rootField);
+    assert.match(app.query('#selected-field').textContent, /<Root>/);
+    app.click('#add-evidence');
+
+    const item = app.query('.evidence-item');
+    assert.deepEqual([...item.querySelectorAll('.evidence-value')].map(node => node.textContent), ['Name: portal.test', 'Name: <Root>']);
+    assert.equal(item.querySelector('root'), null, 'decoded angle brackets remain text, not HTML elements');
+    assert.match(item.innerHTML, /&lt;Root&gt;/);
+    assert.deepEqual(saved(app).lessons['ops-view-1'].answers.source.evidence, [{ frame: 2, field: 'dns.resp.name' }], 'the existing frame-and-field save format is retained');
+    assert.equal(app.errors.length, 0, app.errors.map(e => e.stack).join('\n'));
+  } finally { app.window.close(); }
 });
 
 test('invalid filters show errors and retain the last valid displayed packet set', () => {
