@@ -85,6 +85,13 @@ def main():
                         entry['length'] = int(node.get('size'))
                     layer['fields'].append(entry)
                 layers.append(layer)
+            # Include protocols nested inside another protocol (for example,
+            # UDP quoted by an ICMP error). Their fields were already extracted
+            # above; register presence without duplicating fields or layers.
+            for proto in packet.iter('proto'):
+                name = proto.get('name', '')
+                if name and name != 'geninfo':
+                    fields.setdefault(name, [True])
             # Preserve explicit generated aliases even on versions that omit them from PDML.
             for alias, sources in {'ip.addr':['ip.src','ip.dst'], 'ipv6.addr':['ipv6.src','ipv6.dst'], 'tcp.port':['tcp.srcport','tcp.dstport'], 'udp.port':['udp.srcport','udp.dstport'], 'eth.addr':['eth.src','eth.dst']}.items():
                 if alias not in fields:

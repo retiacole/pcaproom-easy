@@ -96,7 +96,7 @@ Defaults are `/usr/bin/python3` and `/usr/local/bin/tshark`. Set `PCAPROOM_PYTHO
 - `src/data.js`, `captures/`, `pcaproom-easy.html`: generated deliverables.
 - `tests/`: packet, engine, and DOM integration checks.
 
-The 47 automated tests cover packet checksums, all 51 lessons and 95 questions through the UI in both Japanese and English, evidence requirements, all flags, legacy progress, reload/import, time modes, PCAP bytes, stream reassembly, language persistence, translation coverage, and state preservation during switching. Tests also compare new filters with tshark and verify deterministic decoding across timezone/locale settings. DOM tests do not validate actual browser rendering or download UI.
+The 50 automated tests cover packet checksums, all 51 lessons and 95 questions through the UI in both Japanese and English, evidence requirements, all flags, legacy progress, reload/import, time modes, PCAP bytes, stream reassembly, language persistence, translation coverage, and state preservation during switching. Tests also compare new filters with tshark and verify deterministic decoding across timezone/locale settings. Additional checks compare field-generated address, string, and numeric filters and UDP inside ICMP errors with tshark, and verify packet-list scroll preservation during inspection and language changes. DOM tests do not validate actual browser rendering or download UI.
 
 jsdom is required only for tests. To reuse an existing installation, set `PCAPROOM_JSDOM_MODULE` to its module path. To test the shipped HTML directly, set `PCAPROOM_HTML` to that file's path.
 

@@ -2,8 +2,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {execFileSync} = require('node:child_process');
+const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const {buildCapture, transportPayload, pcapBytes, frameBytes} = require('../packet-tools');
+const E = require('../src/engine');
 
 function capture(id, packets) { return buildCapture({id, title:id, description:'Protocol fixture validation', packets}); }
 function first(c,n,key) { return c.packets[n-1].fields[key]?.[0]; }
@@ -36,6 +39,34 @@ test('Ethernet, ARP, IPv4, ICMP echo/error, and UDP encode without errors', () =
   assert.equal(first(c,7,'udp.length'),13);
   const ip = c.packets[6].layers.flatMap(l=>l.fields).find(f=>f.key==='ip.src');
   assert.equal(Buffer.from(c.packets[6].rawHex,'hex').subarray(ip.offset,ip.offset+ip.length).join('.'),'10.0.0.10');
+});
+
+test('ICMP quoted UDP protocol filters match tshark without duplicating fields or detail layers', () => {
+  const specs = require('../content/foundation').captures.filter(c => ['base-icmp-unreachable', 'base-icmp-ttl'].includes(c.id));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pcaproom-icmp-filter-'));
+  try {
+    const profile = path.join(dir, 'profile');
+    fs.mkdirSync(profile);
+    const env = {...process.env, TZ:'UTC', LC_ALL:'C', WIRESHARK_CONFIG_DIR:profile, WIRESHARK_PLUGIN_DIR:path.join(profile, 'plugins'), SSLKEYLOGFILE:''};
+    delete env.WIRESHARK_DATA_DIR;
+    for (const spec of specs) {
+      const c = buildCapture(spec), file = path.join(dir, c.id + '.pcap');
+      fs.writeFileSync(file, Buffer.from(c.pcapBase64, 'base64'));
+      for (const [filter, expected] of [['udp', [1, 2]], ['icmp && udp', [2]]]) {
+        const output = execFileSync(process.env.PCAPROOM_TSHARK || '/usr/local/bin/tshark', ['-n', '-2', '-r', file, '-Y', filter, '-T', 'fields', '-e', 'frame.number'], {encoding:'utf8', env});
+        const actual = output.trim().split('\n').filter(Boolean).map(Number);
+        assert.deepEqual(actual, expected, `${c.id}: tshark ${filter}`);
+        assert.deepEqual(E.filterPackets(filter, c.packets).map(p => p.number), actual, `${c.id}: ${filter} agrees with tshark`);
+      }
+      const error = c.packets[1];
+      assert.deepEqual(error.fields.udp, [true]);
+      assert.equal(error.fields['ip.src'].length, 2, 'Outer and quoted IPv4 sources occur once each');
+      assert.equal(error.fields['udp.srcport'].length, 1, 'Quoted UDP fields are not extracted twice');
+      assert.equal(error.layers.filter(l => l.name === 'ip').length, 1, 'Keep quoted IP details under ICMP');
+      assert.equal(error.layers.some(l => l.name === 'udp'), false, 'Do not add a separate quoted UDP layer');
+      assert.equal(error.layers.find(l => l.name === 'icmp').fields.filter(f => f.key === 'udp.srcport').length, 1);
+    }
+  } finally { fs.rmSync(dir, {recursive:true, force:true}); }
 });
 
 test('IPv6, ICMPv6 echo, NDP solicit/advertise, RA and UDP have correct checksum and fields', () => {

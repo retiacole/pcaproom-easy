@@ -8,6 +8,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
+const { execFileSync } = require('node:child_process');
 const { Blob: NodeBlob } = require('node:buffer');
 const { JSDOM, VirtualConsole } = require(process.env.PCAPROOM_JSDOM_MODULE || 'jsdom');
 
@@ -253,6 +255,57 @@ test('time modes persist, selected fields prepare filters, and chapter endings t
   applyFilter(restored,'eth.padding');assert.deepEqual(visibleFrames(restored),[2]);
   assert.equal(restored.errors.length,0);
  }finally{app.window.close();restored?.window.close();}
+});
+
+test('field-generated address, string and numeric filters match real tshark',()=>{
+ const app=createApp(),dir=fs.mkdtempSync(path.join(os.tmpdir(),'pcaproom-field-filters-'));
+ try{
+  const env={...process.env,TZ:'UTC',LC_ALL:'C',WIRESHARK_CONFIG_DIR:dir,WIRESHARK_PLUGIN_DIR:path.join(dir,'plugins'),SSLKEYLOGFILE:''};
+  delete env.WIRESHARK_DATA_DIR;
+  openLesson(app,'realworld-dns');
+  for(const [frame,key,expected] of [
+   [3,'ip.src','ip.src == 10.0.0.60'],
+   [7,'ipv6.src','ipv6.src == fe80::3c'],
+   [1,'eth.src','eth.src == 02:00:00:00:00:3c'],
+   [3,'dns.qry.name','dns.qry.name == "printer-1.local"'],
+   [3,'udp.srcport','udp.srcport == 5353'],
+  ]){
+   applyFilter(app,'');app.click(`[data-packet="${frame}"]`);
+   const field=[...app.document.querySelectorAll('.field')].find(n=>n.querySelector('.field-key')?.textContent===key);
+   app.click(field);app.click('#field-filter');
+   const expression=app.query('#filter-input').value;
+   assert.equal(expression,expected);
+   const output=execFileSync(process.env.PCAPROOM_TSHARK||'/usr/local/bin/tshark',['-n','-2','-r',path.join(root,'captures/realworld-lan.pcap'),'-Y',expression,'-T','fields','-e','frame.number'],{encoding:'utf8',env});
+   const frames=output.trim().split('\n').filter(Boolean).map(Number);
+   assert.ok(frames.includes(frame),`${key} matches the selected frame in Wireshark`);
+   applyFilter(app,expression);
+   assert.deepEqual(visibleFrames(app),frames,`${key}: generated filter agrees with Wireshark`);
+  }
+  assert.equal(app.errors.length,0);
+ }finally{app.window.close();fs.rmSync(dir,{recursive:true,force:true});}
+});
+
+test('packet list retains both scroll offsets during inspection and resets for new filters and lessons',()=>{
+ const app=createApp();try{
+  openLesson(app,'realworld-dns');
+  const setScroll=()=>{const wrap=app.query('.packet-table-wrap');wrap.scrollTop=5000;wrap.scrollLeft=150;};
+  const assertScroll=(top=5000,left=150)=>{const wrap=app.query('.packet-table-wrap');assert.equal(wrap.scrollTop,top);assert.equal(wrap.scrollLeft,left);};
+  setScroll();app.click('[data-packet="200"]');assertScroll();
+  assert.match(app.query('#selected-number').textContent,/No\. 200$/);
+  app.change('#time-mode','utc');assertScroll();
+  chooseTask(app,1,2);assertScroll();
+  app.change('#language-select','en');assertScroll();
+  app.change('#language-select','ja');assertScroll();
+  applyFilter(app,'unknown_field');assertScroll();
+  applyFilter(app,'dns');assertScroll(0,0);
+  setScroll();app.click('[data-action="clear-filter"]');assertScroll(0,0);
+  setScroll();
+  const lesson=app.window.PcapData.lessons.find(l=>l.tasks.some(t=>['packets','order'].includes(t.kind)));
+  openLesson(app,lesson.id);assertScroll(0,0);
+  chooseTask(app,lesson.tasks.findIndex(t=>['packets','order'].includes(t.kind)),lesson.tasks.length);
+  setScroll();app.click(app.query('[data-pick]'));assertScroll();
+  assert.equal(app.errors.length,0);
+ }finally{app.window.close();}
 });
 
 test('TCP Options disclosure remains open while selecting an option and highlights its bytes',()=>{
