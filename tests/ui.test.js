@@ -70,7 +70,7 @@ test('correlation references, optional note and graduation recommendation surviv
  }finally{app.window.close();reload?.window.close();}
 });
 
-function createApp({ storage = new Map(), unavailable = false, expectedFlags = 0, language } = {}) {
+function createApp({ storage = new Map(), unavailable = false, expectedFlags = 0, language, browserLanguage = 'ja-JP', browserLanguages = [browserLanguage] } = {}) {
   if(language)storage.set('pcaproom-easy.language.v1',language);
   const errors = [], downloads = [], urls = new Map();
   let urlId = 0;
@@ -81,6 +81,7 @@ function createApp({ storage = new Map(), unavailable = false, expectedFlags = 0
     runScripts: 'dangerously',
     virtualConsole,
     beforeParse(window) {
+      Object.defineProperties(window.navigator, {language: {value: browserLanguage}, languages: {value: browserLanguages}});
       const fail = () => { throw new window.DOMException('Storage is disabled for this test', 'SecurityError'); };
       Object.defineProperty(window, 'localStorage', { configurable: true, value: {
         getItem(key) { if (unavailable) return fail(); return storage.get(String(key)) ?? null; },
@@ -742,4 +743,21 @@ test('language preference tolerates blocked storage and invalid values',()=>{
  try{app.change('#language-select','en');assert.equal(app.document.documentElement.lang,'en');assert.match(app.query('#storage-note').textContent,/Autosave/);assertEnglish(app);app.click('[data-open="ops-view-1"]');assertEnglish(app);assert.equal(app.errors.length,0,app.errors.map(e=>e.stack).join('\n'));
  invalid=createApp({language:'unsupported'});assert.equal(invalid.document.documentElement.lang,'ja');
  }finally{app.dom.window.close();invalid?.dom.window.close();}
+});
+
+test('browser language sets initial HTML and controls while saved choice and progress stay independent',()=>{
+  for(const [browserLanguage,browserLanguages,expected]of [
+    ['ja-JP',['ja-JP'],'ja'],['th-TH',['th-TH'],'en'],['ja-JP',['fr-FR','ja-JP'],'en'],
+  ]){
+    const app=createApp({browserLanguage,browserLanguages});
+    try{
+      assert.equal(app.document.documentElement.lang,expected);
+      assert.equal(app.query('#language-select').value,expected);
+      if(expected==='en')assertEnglish(app);
+      app.change('#language-select',expected==='en'?'ja':'en');
+      const reload=createApp({browserLanguage,browserLanguages,storage:new Map(app.storage)});
+      try{assert.equal(reload.document.documentElement.lang,expected==='en'?'ja':'en');}finally{reload.window.close();}
+      assert.equal(app.errors.length,0);
+    }finally{app.window.close();}
+  }
 });
