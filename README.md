@@ -2,7 +2,7 @@
   <img src="docs/images/pcaproom-banner.png" width="960" alt="ステンドグラスのある大聖堂で祈るpcaproom-easyのキャラクターを描いたピクセルアート">
 </p>
 
-# pcaproom-easy v0.4.0
+# pcaproom-easy v0.4.1
 
 [English README](README.en.md) | 日本語
 
@@ -18,6 +18,8 @@
 <br clear="right">
 
 ## 日本語・英語の切り替え
+
+初回はブラウザの優先言語に合わせ、日本語なら日本語、それ以外なら英語で表示します。保存された言語選択があれば、その設定を優先します。
 
 HTML上部の **Language** メニューから **日本語 / English** を選べます。54問すべての問題文、選択肢、3段階ヒント、解説、用語帳、操作案内に対応しています。言語はブラウザに保存され、次回も同じ言語で開きます（保存が利用できる場合）。
 

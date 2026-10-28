@@ -2,7 +2,7 @@
   <img src="docs/images/pcaproom-banner.png" width="960" alt="Pixel art of the pcaproom-easy character praying in a cathedral with stained-glass windows">
 </p>
 
-# pcaproom-easy v0.4.0
+# pcaproom-easy v0.4.1
 
 English | [日本語](README.md)
 
@@ -19,7 +19,7 @@ An offline introduction to reading network packets: **54 lessons, 101 questions*
 ## Start learning
 
 1. Open **[Play Now](https://retiacole.github.io/pcaproom-easy/)** to start in your browser. For offline use, open [Offline HTML](https://github.com/retiacole/pcaproom-easy/blob/main/pcaproom-easy.html), choose **Download raw file**, and open the saved HTML in your browser. Downloading and extracting the repository ZIP also works.
-2. Choose **English** from the **Language** menu in the HTML header. Japanese remains available in the same menu.
+2. The first visit uses Japanese for a Japanese browser preference and English for every other language. Change it with the **Language** menu if needed; a saved choice takes priority.
 3. Choose **Open your first packet**, or select any lesson on the learning map.
 4. Click a packet number, read its details, and enter or select your answer in **① Answer**.
 5. When **② Add evidence** appears, evidence is required too. Choose **Choose evidence** to move to **Packet Details**, then click the detail row that supports your answer. Use **Add this row as evidence for question 1** beside the selected row (the number follows the current question). Selecting a row alone does not add it.

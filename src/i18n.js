@@ -1,8 +1,18 @@
 (function(root){
 'use strict';
 const STORE='pcaproom-easy.language.v1';
-let locale='ja';
-try{if(localStorage.getItem(STORE)==='en')locale='en';}catch{}
+  function browserLocale(){
+    let preferred='';
+    try{
+      const values=root.navigator?.languages;
+      if(Array.isArray(values))preferred=values.find(value=>typeof value==='string'&&value.trim())||'';
+    }catch(_){/* Browser language access is optional. */}
+    if(!preferred)try{preferred=root.navigator?.language||'';}catch(_){/* Use English if unavailable. */}
+    const primary=typeof preferred==='string'?preferred.trim().toLowerCase().split('-')[0]:'';
+    return primary==='ja'?'ja':'en';
+  }
+let locale=browserLocale();
+try{const saved=root.localStorage?.getItem(STORE);if(saved==='ja'||saved==='en')locale=saved;}catch{}
 const messages={
 '本文へ':'Skip to content','ガイド付き':'Guided','練習':'Practice','自力で確認':'Independent',
 'pcaproom-easy 学習マップ':'pcaproom-easy learning map','用語帳':'Glossary','使い方':'How to use','保存':'Save','読込':'Load',
