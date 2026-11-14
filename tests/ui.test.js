@@ -761,3 +761,17 @@ test('browser language sets initial HTML and controls while saved choice and pro
     }finally{app.window.close();}
   }
 });
+
+
+test('packet selection keeps keyboard focus on the same row after rendering',()=>{
+ const app=createApp();
+ try{
+  app.click('[data-open]');
+  assert.equal(app.document.activeElement.tagName,'H1');
+  const second=app.document.querySelectorAll('[data-packet]')[1];
+  const number=second.dataset.packet;second.focus();second.click();
+  assert.equal(app.document.activeElement.dataset.packet,number);
+  assert.equal(app.document.activeElement.getAttribute('aria-pressed'),'true');
+  assert.equal(app.errors.length,0);
+ }finally{app.window.close();}
+});
