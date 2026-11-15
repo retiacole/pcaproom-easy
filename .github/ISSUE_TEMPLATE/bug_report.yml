@@ -1,0 +1,38 @@
+name: 不具合の報告 / Bug report
+description: 動作・表示の問題を伝える / Report something that does not work as expected
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        日本語・英語どちらでも受け付けています。投稿内容は公開されます。社内情報・個人情報・認証情報は含めず、教材のデータで説明してください。
+        Japanese and English are welcome. Posts are public. Use the course's sample data and leave out company information, personal information, and credentials.
+  - type: input
+    id: lesson
+    attributes:
+      label: 課題名・画面（任意） / Lesson or screen (optional)
+      description: 分かれば教材のバージョンも記入してください。 / Include the course version if you know it.
+    validations:
+      required: false
+  - type: textarea
+    id: result
+    attributes:
+      label: 起きたこと・期待した結果 / What happened and what you expected
+      description: 実際の表示やエラーと、本来どうなると思ったかを教えてください。 / Describe the result or error and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 操作手順 / Steps to reproduce
+      description: 問題が起きるまでの操作や入力を、分かる範囲で教えてください。 / Tell us the steps and inputs leading to the problem, as far as you can remember.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: 利用環境（任意） / Environment (optional)
+      description: OS、ブラウザ、Web版・保存したHTMLのどちらか。 / OS, browser, and whether you used the website or a downloaded HTML file.
+      placeholder: Windows 11 / Edge / Web
+    validations:
+      required: false

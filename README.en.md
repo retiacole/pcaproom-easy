@@ -12,7 +12,7 @@ Part of **BLUE SERIES** — foundations, detection, and investigation. [Explore 
 
 English | [日本語](README.md)
 
-**[Play Now](https://retiacole.github.io/pcaproom-easy/)** · [Offline HTML](https://github.com/retiacole/pcaproom-easy/blob/main/pcaproom-easy.html)
+**[Play Now](https://retiacole.github.io/pcaproom-easy/)** · [Offline HTML](https://github.com/retiacole/pcaproom-easy/blob/main/pcaproom-easy.html) · [Ask a question or report a problem](https://github.com/retiacole/pcaproom-easy/issues/new/choose)
 
 <img src="docs/images/pcaproom-character.png" align="right" width="120" alt="The pcaproom-easy character in white and blue, holding a staff and a book">
 
@@ -90,6 +90,12 @@ TLS examples teach structure and visibility limits. Opaque Application Data is s
 Typical TCP SYNs carry options and deterministic raw 32-bit sequence numbers. When both SYNs negotiate Timestamps, subsequent non-RST segments include them. Ordinary DNS carries EDNS0 OPT; mDNS does not. DHCP includes identification, maximum message size, and renewal/rebinding settings. MACs are fictional locally administered addresses.
 
 Normal Ethernet frames are padded to 60 bytes excluding FCS. A comparison lesson intentionally omits TCP options and combines 54-byte sender-side records before padding with a 60-byte LAN record. Embedded decoding uses UTC and C locale; Wireshark may display local time or different names/formatting. Compare frame numbers and field values.
+
+## Questions and problems
+
+[Ask a question or report a problem](https://github.com/retiacole/pcaproom-easy/issues/new/choose)
+
+Questions, unclear instructions, and suggestions are welcome in Japanese or English. A GitHub account is required to post. Posts are public: use the course's sample data and leave out company or personal information.
 
 ## Build and verify
 

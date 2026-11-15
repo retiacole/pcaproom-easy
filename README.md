@@ -12,7 +12,7 @@
 
 [English README](README.en.md) | 日本語
 
-**[すぐにやってみる](https://retiacole.github.io/pcaproom-easy/)** · [オフライン用HTML](https://github.com/retiacole/pcaproom-easy/blob/main/pcaproom-easy.html)
+**[すぐにやってみる](https://retiacole.github.io/pcaproom-easy/)** · [オフライン用HTML](https://github.com/retiacole/pcaproom-easy/blob/main/pcaproom-easy.html) · [質問・不具合を報告する](https://github.com/retiacole/pcaproom-easy/issues/new/choose)
 
 <img src="docs/images/pcaproom-character.png" align="right" width="120" alt="白と青の衣装で杖と本を持つpcaproom-easyのキャラクター">
 
@@ -112,6 +112,12 @@ TLSは構造を読むための合成データです。特に不透明なApplicat
 - 通常はEthernet最小60バイト（FCSを除く）までパディングします。比較問題だけはOptionsを省き、送信処理内で得た54バイトとLAN上の60バイトを組み合わせた教材であることを明示しています。
 
 TCP仕様の参考：[RFC 9293（MSS）](https://www.rfc-editor.org/rfc/rfc9293.html)、[RFC 7323（Window Scale・Timestamps）](https://www.rfc-editor.org/rfc/rfc7323.html)。
+
+## 質問・不具合の報告
+
+[質問・不具合を報告する](https://github.com/retiacole/pcaproom-easy/issues/new/choose)
+
+分かりにくかった点や改善提案も、日本語・英語で受け付けています。投稿にはGitHubアカウントが必要です。内容は公開されるため、社内情報・個人情報は含めず、教材のデータで説明してください。
 
 ## ソースからのビルド
 

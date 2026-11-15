@@ -1,0 +1,23 @@
+name: 質問・改善提案 / Question or suggestion
+description: 分からないことや改善案を伝える / Ask about the course or suggest an improvement
+title: "[Question] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        日本語・英語どちらでも受け付けています。投稿内容は公開されます。社内情報・個人情報・認証情報は含めず、教材のデータで説明してください。
+        Japanese and English are welcome. Posts are public. Use the course's sample data and leave out company information, personal information, and credentials.
+  - type: input
+    id: lesson
+    attributes:
+      label: 課題名・画面（任意） / Lesson or screen (optional)
+      description: 分かる範囲で記入してください。 / Add the lesson name or page if you know it.
+    validations:
+      required: false
+  - type: textarea
+    id: question
+    attributes:
+      label: 質問・改善したいこと / Your question or suggestion
+      description: 何が分からなかったか、何を改善したいかを教えてください。 / Tell us what was unclear or what you would like improved.
+    validations:
+      required: true
