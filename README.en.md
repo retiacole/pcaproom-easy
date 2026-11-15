@@ -2,6 +2,12 @@
   <img src="docs/images/pcaproom-banner.png" width="960" alt="Pixel art of the pcaproom-easy character praying in a cathedral with stained-glass windows">
 </p>
 
+<p align="center">
+  <a href="https://github.com/retiacole#blue-series"><img src="docs/images/blue-series.svg" width="960" alt="BLUE SERIES — 守るための基礎・検知・調査 / Foundations, detection and investigation"></a>
+</p>
+
+Part of **BLUE SERIES** — foundations, detection, and investigation. [Explore the series](https://github.com/retiacole#blue-series). For learning how weaknesses are verified, try [RED SERIES: pentestroom](https://github.com/retiacole/pentestroom).
+
 # pcaproom-easy v0.4.1
 
 English | [日本語](README.md)

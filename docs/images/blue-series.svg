@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="220" viewBox="0 0 960 220" role="img" aria-labelledby="title desc">
+  <title id="title">BLUE SERIES — 守るための基礎・検知・調査</title>
+  <desc id="desc">roomシリーズのBLUE教材。Foundations, detection and investigation.</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1"><stop stop-color="#102e50"/><stop offset="1" stop-color="#0b1b31"/></linearGradient>
+    <linearGradient id="accent" x2="1"><stop stop-color="#38bdf8"/><stop offset="1" stop-color="#1d4ed8"/></linearGradient>
+  </defs>
+  <rect width="960" height="220" rx="18" fill="url(#background)"/>
+  <rect width="8" height="184" x="0" y="18" rx="4" fill="url(#accent)"/>
+  <g fill="none" stroke="#38bdf8" stroke-width="1" opacity=".16">
+    <path d="M690 0v220M770 0v220M850 0v220M930 0v220M650 30h310M650 110h310M650 190h310"/>
+    <circle cx="817" cy="110" r="83"/><circle cx="817" cy="110" r="61"/>
+  </g>
+  <path d="M817 53l41 17v34c0 29-18 48-41 61-23-13-41-32-41-61V70z" fill="#153b60" stroke="#7dd3fc" stroke-width="3"/>
+  <path d="M796 109l14 14 29-32" fill="none" stroke="#bae6fd" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+  <text x="44" y="38" fill="#bae6fd" font-family="system-ui, sans-serif" font-size="17" font-weight="600" letter-spacing="3">ROOM SERIES</text>
+  <text x="42" y="108" fill="#ffffff" font-family="system-ui, sans-serif" font-size="64" font-weight="750" letter-spacing="1">BLUE SERIES</text>
+  <text x="44" y="153" fill="#e0f2fe" font-family="system-ui, 'Noto Sans JP', sans-serif" font-size="25" font-weight="600">守るための基礎・検知・調査</text>
+  <text x="44" y="187" fill="#bae6fd" font-family="system-ui, sans-serif" font-size="20">Foundations · Detection · Investigation</text>
+</svg>

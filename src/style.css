@@ -61,3 +61,8 @@ dialog::backdrop { overflow:hidden; overscroll-behavior:contain; }
     min-block-size:2.75rem; min-inline-size:2.75rem;
   }
 }
+
+/* Shared room-series identity; course content and status colors keep their meanings. */
+.brand .room-series-label{display:block;font:700 .75rem/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.08em;color:#1d4ed8;text-align:left;white-space:normal}
+.brand .brandmark{background:#102e50;color:#dbeafe;border-color:#3b82f6}
+.topbar{background:#eff5ff;box-shadow:inset 0 -2px 0 #3b82f6}
